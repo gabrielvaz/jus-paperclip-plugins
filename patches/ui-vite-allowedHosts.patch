@@ -1,0 +1,12 @@
+diff --git a/ui/vite.config.ts b/ui/vite.config.ts
+index 22d0b012..ce51ed52 100644
+--- a/ui/vite.config.ts
++++ b/ui/vite.config.ts
+@@ -12,6 +12,7 @@ export default defineConfig({
+   },
+   server: {
+     port: 5173,
++    allowedHosts: "all",
+     proxy: {
+       "/api": {
+         target: "http://localhost:3100",
