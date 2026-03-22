@@ -65,22 +65,24 @@ export function ContentReviewPage() {
   if (!companyId) return <div className="p-8 text-muted-foreground">Selecione uma empresa.</div>;
 
   return (
-    <div className="p-4 md:p-6 min-h-screen">
-      <div className="mb-6">
-        <h1 className="text-xl font-bold">Content Review Board</h1>
-        <p className="text-sm text-muted-foreground mt-1">Visualize, aprove e gerencie conteúdo produzido pelos agentes.</p>
+    <div className="flex flex-col h-full min-h-screen">
+      {/* Toolbar */}
+      <div className="px-4 py-2 border-b border-border flex items-center gap-2 flex-wrap bg-card/80 backdrop-blur-sm sticky top-0 z-10">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-muted-foreground shrink-0"><path d="M9 11l3 3L22 4" /><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" /></svg>
+        <span className="text-sm font-semibold mr-2">Content Review</span>
+        <div className="h-4 w-px bg-border hidden sm:block" />
+        <input type="text" placeholder="Buscar..." value={search} onChange={e => setSearch(e.target.value)}
+          className="h-8 w-full max-w-[180px] rounded-md border border-input bg-background px-2.5 text-xs focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] outline-none" />
+        <button onClick={() => setFilter("all")} className={`px-2.5 py-1 rounded-md text-xs font-medium border transition-colors ${filter === "all" ? "bg-primary text-primary-foreground border-primary" : "border-input text-muted-foreground hover:bg-accent"}`}>Todas</button>
+        {editorias.map(ed => (
+          <button key={ed} onClick={() => setFilter(ed)} className={`px-2.5 py-1 rounded-md text-xs font-medium border transition-colors ${filter === ed ? "border-primary/50 bg-primary/10 text-primary" : "border-input text-muted-foreground hover:bg-accent"}`}>{ed}</button>
+        ))}
+        <button onClick={() => refresh()} className="ml-auto p-1.5 rounded-md border border-input text-muted-foreground hover:bg-accent transition-colors" title="Atualizar">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12a9 9 0 11-6.219-8.56" /><polyline points="21 3 21 9 15 9" /></svg>
+        </button>
       </div>
 
-      {/* Filters */}
-      <div className="flex gap-2 mb-5 flex-wrap items-center">
-        <input type="text" placeholder="Buscar..." value={search} onChange={e => setSearch(e.target.value)}
-          className="h-9 w-full max-w-[220px] rounded-md border border-input bg-background px-3 py-1 text-sm shadow-xs focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] outline-none" />
-        <button onClick={() => setFilter("all")} className={`px-3 py-1.5 rounded-md text-xs font-medium border transition-colors ${filter === "all" ? "bg-primary text-primary-foreground border-primary" : "border-input text-muted-foreground hover:bg-accent"}`}>Todas</button>
-        {editorias.map(ed => (
-          <button key={ed} onClick={() => setFilter(ed)} className={`px-3 py-1.5 rounded-md text-xs font-medium border transition-colors ${filter === ed ? "border-primary/50 bg-primary/10 text-primary" : "border-input text-muted-foreground hover:bg-accent"}`}>{ed}</button>
-        ))}
-        <button onClick={() => refresh()} className="ml-auto px-3 py-1.5 rounded-md text-xs border border-input text-muted-foreground hover:bg-accent transition-colors">Atualizar</button>
-      </div>
+      <div className="p-4 md:p-6 flex-1">
 
       {/* Kanban */}
       {loading ? <div className="text-center text-muted-foreground text-sm py-12">Carregando...</div> : (
@@ -120,6 +122,7 @@ export function ContentReviewPage() {
           })}
         </div>
       )}
+      </div>
     </div>
   );
 }

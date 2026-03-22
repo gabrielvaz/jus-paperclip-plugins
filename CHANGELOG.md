@@ -1,27 +1,44 @@
 # Changelog
 
+## [0.3.0] - 2026-03-22
+
+### Galeria
+- Botão "Back" removido das páginas de plugin (PluginPage.tsx patch)
+- Toolbar integrada com ícone + filtros dropdown compactos (sem título redundante)
+- Botão atualizar com ícone de refresh
+- Ao reprovar carrossel: botão de aprovar desaparece, link "Ver issue JUS-XX" aparece
+- Reprovação registra no log de aprendizado + posta na timeline + comenta na issue
+
+### Timeline
+- Toolbar unificada com ícone de chat + filtros inline
+- Backdrop blur no header para efeito de profundidade
+- Contador de mensagens visível apenas em desktop
+
+### Content Review
+- Toolbar integrada no topo com ícone de check, busca e filtros por editoria inline
+- Layout flex-col h-full para ocupar tela inteira
+
+### Critic Agent
+- Logo Jusbrasil/Jus IA obrigatório em toda peça visual — reprovação imediata se ausente
+- Acentuação incorreta como critério de reprovação imediata
+
+### Patches Paperclip
+- `ui-pluginpage-no-back.patch` — Remove botão Back e wrapper das plugin pages
+
 ## [0.2.0] - 2026-03-21
 
 ### plugin-creative-hub
-- **Galeria como feed de carrosséis** — imagens agrupadas por issue com slider, thumbnails, e navegação
-- **Aprovação/reprovação de carrossel inteiro** — não mais por imagem individual
-- **Modal de reprovação** com 8 motivos selecionáveis + campo de texto para direcionamento
-- **Agente Designer acordado automaticamente** ao reprovar para criar nova versão
-- **Timeline e Galeria separados** como seções independentes no menu lateral
-- **Filtros por dropdown** no topo (mobile-friendly) em vez de sidebar
-- **Imagens via base64** no gallery data (funciona via Cloudflare Tunnel)
-- **Lazy loading** de imagens individuais via plugin action
+- Galeria como feed de carrosséis com slider e thumbnails
+- Aprovação/reprovação de carrossel inteiro
+- Modal de reprovação com 8 motivos + direcionamento
+- Timeline e Galeria como seções separadas no menu
+- Imagens via base64 (funciona via Cloudflare Tunnel)
+- Lazy loading de imagens via plugin action
 
 ### plugin-content-review
-- **UI Tailwind nativa** do Paperclip (bg-card, border-border, text-foreground)
-- **Mobile responsivo** — kanban com scroll horizontal, filtros flex-wrap
-- **Radar chart SVG** para scores do Critic (5 dimensões)
-- **Sidebar clicável** com ícones SVG no padrão do Paperclip
-
-### Correções
-- Acentuação correta em todos os textos em português (41 instâncias corrigidas)
-- Sidebar links como `<a>` tags com classes Tailwind nativas
-- AllowedHosts no Vite para acesso via tunnel
+- UI Tailwind nativa do Paperclip
+- Mobile responsivo
+- Radar chart SVG para scores do Critic
 
 ## [0.1.0] - 2026-03-21
 

@@ -230,15 +230,19 @@ export function TimelinePage() {
   if (!companyId) return <div className="p-8 text-muted-foreground">Selecione uma empresa.</div>;
 
   return (
-    <div className="flex flex-col h-[calc(100vh-48px)] text-foreground overflow-hidden">
-      {/* TOP BAR: Filters (mobile-friendly dropdowns) */}
-      <div className="px-3 py-2.5 border-b border-border flex items-center gap-2 flex-wrap bg-card">
-        <span className="text-base font-bold mr-1"># timeline</span>
+    <div className="flex flex-col h-full text-foreground overflow-hidden">
+      {/* Toolbar */}
+      <div className="px-4 py-2 border-b border-border flex items-center gap-2 flex-wrap bg-card/80 backdrop-blur-sm sticky top-0 z-10">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-muted-foreground shrink-0"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" /></svg>
+        <span className="text-sm font-semibold mr-2">Timeline</span>
+        <div className="h-4 w-px bg-border hidden sm:block" />
         <DropdownFilter label="Agente" value={filterAgent} options={agentOptions} onChange={setFilterAgent} />
         <DropdownFilter label="Tipo" value={filterType} options={typeOptions} onChange={setFilterType} />
         {tags.length > 0 && <DropdownFilter label="Editoria" value={filterTag} options={tagOptions} onChange={setFilterTag} />}
-        <span className="text-xs text-muted-foreground ml-auto">{timeline?.length || 0} msgs</span>
-        <button onClick={() => refreshTl()} className="px-2 py-1 rounded-md border border-input text-[11px] text-muted-foreground hover:bg-accent">Atualizar</button>
+        <span className="text-[11px] text-muted-foreground ml-auto hidden sm:inline">{timeline?.length || 0} mensagens</span>
+        <button onClick={() => refreshTl()} className="p-1.5 rounded-md border border-input text-muted-foreground hover:bg-accent transition-colors" title="Atualizar">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12a9 9 0 11-6.219-8.56" /><polyline points="21 3 21 9 15 9" /></svg>
+        </button>
       </div>
 
       {/* Two-panel: messages + optional thread */}
@@ -380,7 +384,7 @@ function CarouselSlider({ images }: { images: Array<{ id: string; filename: stri
 }
 
 // Feed card for a carousel (grouped by issue)
-function CarouselFeedCard({ carousel, companyId, onRefresh }: { carousel: any; companyId: string; onRefresh: () => void }) {
+function CarouselFeedCard({ carousel, companyId, companyPrefix, onRefresh }: { carousel: any; companyId: string; companyPrefix?: string; onRefresh: () => void }) {
   const [showReject, setShowReject] = useState(false);
   const [acting, setActing] = useState(false);
   const approveAction = usePluginAction("approve-piece");
@@ -452,19 +456,19 @@ function CarouselFeedCard({ carousel, companyId, onRefresh }: { carousel: any; c
 
         {/* Actions */}
         <div className="px-4 py-3 flex items-center gap-2 border-t border-border flex-wrap">
-          {carousel.reviewStatus !== "approved" && (
-            <button onClick={handleApprove} disabled={acting}
-              className="inline-flex items-center gap-1.5 rounded-md text-sm font-medium h-9 px-4 border border-green-500/30 text-green-500 bg-green-500/10 hover:bg-green-500/20 disabled:opacity-50 transition-colors">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M20 6L9 17l-5-5"/></svg>
-              Aprovar carrossel
-            </button>
-          )}
-          {carousel.reviewStatus !== "rejected" && carousel.reviewStatus !== "approved" && (
-            <button onClick={() => setShowReject(true)} disabled={acting}
-              className="inline-flex items-center gap-1.5 rounded-md text-sm font-medium h-9 px-4 border border-red-500/30 text-red-500 bg-red-500/10 hover:bg-red-500/20 disabled:opacity-50 transition-colors">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
-              Reprovar
-            </button>
+          {carousel.reviewStatus !== "approved" && carousel.reviewStatus !== "rejected" && (
+            <>
+              <button onClick={handleApprove} disabled={acting}
+                className="inline-flex items-center gap-1.5 rounded-md text-sm font-medium h-9 px-4 border border-green-500/30 text-green-500 bg-green-500/10 hover:bg-green-500/20 disabled:opacity-50 transition-colors">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M20 6L9 17l-5-5"/></svg>
+                Aprovar carrossel
+              </button>
+              <button onClick={() => setShowReject(true)} disabled={acting}
+                className="inline-flex items-center gap-1.5 rounded-md text-sm font-medium h-9 px-4 border border-red-500/30 text-red-500 bg-red-500/10 hover:bg-red-500/20 disabled:opacity-50 transition-colors">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                Reprovar
+              </button>
+            </>
           )}
           {carousel.reviewStatus === "approved" && (
             <span className="text-xs text-green-500 font-medium flex items-center gap-1">
@@ -473,7 +477,17 @@ function CarouselFeedCard({ carousel, companyId, onRefresh }: { carousel: any; c
             </span>
           )}
           {carousel.reviewStatus === "rejected" && (
-            <span className="text-xs text-red-400">Feedback enviado — aguardando nova versão do agente</span>
+            <div className="flex items-center gap-3 flex-wrap">
+              <span className="text-xs text-red-400 flex items-center gap-1">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                Reprovado — feedback enviado ao agente
+              </span>
+              <a href={`/${companyPrefix || "JUS"}/issues/JUS-${carousel.issueNumber}`}
+                className="inline-flex items-center gap-1.5 rounded-md text-xs font-medium h-8 px-3 border border-primary/30 text-primary bg-primary/10 hover:bg-primary/20 transition-colors">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                Ver issue JUS-{carousel.issueNumber}
+              </a>
+            </div>
           )}
         </div>
       </div>
@@ -516,14 +530,18 @@ export function GalleryPage() {
   if (!companyId) return <div className="p-8 text-muted-foreground">Selecione uma empresa.</div>;
 
   return (
-    <div className="flex flex-col h-[calc(100vh-48px)] text-foreground overflow-hidden">
-      {/* TOP BAR */}
-      <div className="px-3 py-2.5 border-b border-border flex items-center gap-2 flex-wrap bg-card">
-        <span className="text-base font-bold mr-1"># galeria</span>
+    <div className="flex flex-col h-full text-foreground overflow-hidden">
+      {/* Toolbar */}
+      <div className="px-4 py-2 border-b border-border flex items-center gap-2 flex-wrap bg-card/80 backdrop-blur-sm sticky top-0 z-10">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-muted-foreground shrink-0"><rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" /><path d="M21 15l-5-5L5 21" /></svg>
+        <span className="text-sm font-semibold mr-2">Galeria</span>
+        <div className="h-4 w-px bg-border hidden sm:block" />
         <DropdownFilter label="Editoria" value={galFilter} options={tagOptions} onChange={setGalFilter} />
         <DropdownFilter label="Status" value={statusFilter} options={statusOptions} onChange={setStatusFilter} />
-        <span className="text-xs text-muted-foreground ml-auto">{filtered.length} carrosséis</span>
-        <button onClick={() => refreshGal()} className="px-2 py-1 rounded-md border border-input text-[11px] text-muted-foreground hover:bg-accent">Atualizar</button>
+        <span className="text-[11px] text-muted-foreground ml-auto hidden sm:inline">{filtered.length} carrosséis</span>
+        <button onClick={() => refreshGal()} className="p-1.5 rounded-md border border-input text-muted-foreground hover:bg-accent transition-colors" title="Atualizar">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12a9 9 0 11-6.219-8.56" /><polyline points="21 3 21 9 15 9" /></svg>
+        </button>
       </div>
 
       {/* Feed */}
@@ -531,7 +549,7 @@ export function GalleryPage() {
         <div className="max-w-2xl mx-auto p-3 md:p-4 space-y-4">
           {galLoading ? <div className="text-center text-muted-foreground text-sm p-8">Carregando carrosséis...</div>
           : !filtered.length ? <div className="text-center text-muted-foreground text-sm p-12">Nenhum carrossel para revisão.</div>
-          : filtered.map((c: any) => <CarouselFeedCard key={c.issueId} carousel={c} companyId={companyId!} onRefresh={refreshGal} />)}
+          : filtered.map((c: any) => <CarouselFeedCard key={c.issueId} carousel={c} companyId={companyId!} companyPrefix={ctx?.companyPrefix || undefined} onRefresh={refreshGal} />)}
         </div>
       </div>
     </div>

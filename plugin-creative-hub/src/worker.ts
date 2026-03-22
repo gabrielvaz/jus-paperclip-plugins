@@ -380,24 +380,97 @@ const plugin = definePlugin({
       const reasons = (params.reasons as string[]) || [];
       const note = str(params.note);
 
+      // 1. Update review status
       await ctx.state.set(
         { scopeKind: "issue", scopeId: issueId, namespace: "creative-hub", stateKey: "review-status" },
         "rejected",
       );
       await ctx.issues.update(issueId, { status: "in_progress" }, companyId);
 
-      const body = `[REPROVADA] Motivos: ${reasons.join(", ")}${note ? `\n\nDirecionamento: ${note}` : ""}\n\nPor favor, crie uma nova versão com base nesse feedback.`;
-      await ctx.issues.createComment(issueId, body, companyId);
-      await ctx.activity.log({ companyId, message: `Peça reprovada na galeria`, entityType: "issue", entityId: issueId });
+      // 2. Get issue info for context
+      const issue = await ctx.issues.get(issueId, companyId);
+      const issueTitle = issue?.title || issueId;
+      const issueNumber = (issue as any)?.issueNumber || "?";
 
-      // Wake the designer agent to rework
+      // 3. Post detailed comment on the issue (agent will see this)
+      const reasonList = reasons.map((r, i) => `${i + 1}. ${r}`).join("\n");
+      const commentBody = [
+        `[REPROVADA] Carrossel reprovado na revisão humana.`,
+        ``,
+        `**Motivos:**`,
+        reasonList,
+        note ? `\n**Direcionamento do revisor:**\n${note}` : "",
+        ``,
+        `Por favor, crie uma nova versão corrigindo os pontos acima. Consulte a skill de erros recorrentes para não repetir.`,
+      ].filter(Boolean).join("\n");
+      await ctx.issues.createComment(issueId, commentBody, companyId);
+
+      // 4. Log activity
+      await ctx.activity.log({
+        companyId,
+        message: `Carrossel JUS-${issueNumber} reprovado: ${reasons.join(", ")}`,
+        entityType: "issue",
+        entityId: issueId,
+      });
+
+      // 5. Save to learning log (skill de erros recorrentes)
+      try {
+        const existing = await ctx.state.get({
+          scopeKind: "company", scopeId: companyId,
+          namespace: "creative-hub", stateKey: "rejection-log",
+        }).catch(() => []);
+        const log = Array.isArray(existing) ? existing : [];
+        log.push({
+          issueId,
+          issueNumber,
+          issueTitle,
+          reasons,
+          note,
+          timestamp: new Date().toISOString(),
+        });
+        // Keep last 100 rejections
+        await ctx.state.set(
+          { scopeKind: "company", scopeId: companyId, namespace: "creative-hub", stateKey: "rejection-log" },
+          log.slice(-100),
+        );
+      } catch { /* best effort */ }
+
+      // 6. Post to hub timeline (broadcast)
+      try {
+        const hubMessages = await ctx.state.get({
+          scopeKind: "company", scopeId: companyId,
+          namespace: "creative-hub", stateKey: "messages",
+        }).catch(() => []);
+        const msgs = Array.isArray(hubMessages) ? hubMessages : [];
+        msgs.push({
+          id: `reject-${Date.now()}`,
+          type: "approval",
+          timestamp: new Date().toISOString(),
+          authorType: "human",
+          authorId: null,
+          authorName: "Board",
+          body: `[REPROVADA] JUS-${issueNumber} — ${issueTitle.replace(/^\[[^\]]+\]\s*/, "")}\nMotivos: ${reasons.join(", ")}${note ? `\nDirecionamento: ${note}` : ""}`,
+          imageUrls: [],
+          mentions: [],
+          tags: [],
+          issueId,
+          issueNumber,
+          issueTitle,
+        });
+        await ctx.state.set(
+          { scopeKind: "company", scopeId: companyId, namespace: "creative-hub", stateKey: "messages" },
+          msgs.slice(-500),
+        );
+      } catch { /* best effort */ }
+
+      // 7. Wake the designer agent to rework
       try {
         const agents = await ctx.agents.list({ companyId, limit: 50 });
         const designer = agents.find((a: any) => a.role === "designer" && a.name.includes("Designer"));
         if (designer?.id) {
           await ctx.agents.invoke(designer.id, companyId, {
-            prompt: `Peça reprovada na issue ${issueId}. Feedback: ${reasons.join(", ")}. ${note}. Crie uma nova versão.`,
-            reason: "Peça reprovada na galeria — refazer",
+            prompt: `Carrossel JUS-${issueNumber} reprovado na revisão humana.\n\nMotivos: ${reasons.join(", ")}\n${note ? `Direcionamento: ${note}\n` : ""}\nVá até a issue ${issueId}, leia o feedback completo nos comentários, consulte a skill de erros recorrentes, e crie uma nova versão corrigida.`,
+            reason: `Carrossel JUS-${issueNumber} reprovado — refazer`,
           });
         }
       } catch { /* agent may be busy */ }

@@ -241,17 +241,22 @@ function TimelinePage() {
     ...tags.map((t) => ({ key: t, label: t, color: tc(t) }))
   ], [tags]);
   if (!companyId) return /* @__PURE__ */ jsx("div", { className: "p-8 text-muted-foreground", children: "Selecione uma empresa." });
-  return /* @__PURE__ */ jsxs("div", { className: "flex flex-col h-[calc(100vh-48px)] text-foreground overflow-hidden", children: [
-    /* @__PURE__ */ jsxs("div", { className: "px-3 py-2.5 border-b border-border flex items-center gap-2 flex-wrap bg-card", children: [
-      /* @__PURE__ */ jsx("span", { className: "text-base font-bold mr-1", children: "# timeline" }),
+  return /* @__PURE__ */ jsxs("div", { className: "flex flex-col h-full text-foreground overflow-hidden", children: [
+    /* @__PURE__ */ jsxs("div", { className: "px-4 py-2 border-b border-border flex items-center gap-2 flex-wrap bg-card/80 backdrop-blur-sm sticky top-0 z-10", children: [
+      /* @__PURE__ */ jsx("svg", { xmlns: "http://www.w3.org/2000/svg", width: "16", height: "16", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", className: "text-muted-foreground shrink-0", children: /* @__PURE__ */ jsx("path", { d: "M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" }) }),
+      /* @__PURE__ */ jsx("span", { className: "text-sm font-semibold mr-2", children: "Timeline" }),
+      /* @__PURE__ */ jsx("div", { className: "h-4 w-px bg-border hidden sm:block" }),
       /* @__PURE__ */ jsx(DropdownFilter, { label: "Agente", value: filterAgent, options: agentOptions, onChange: setFilterAgent }),
       /* @__PURE__ */ jsx(DropdownFilter, { label: "Tipo", value: filterType, options: typeOptions, onChange: setFilterType }),
       tags.length > 0 && /* @__PURE__ */ jsx(DropdownFilter, { label: "Editoria", value: filterTag, options: tagOptions, onChange: setFilterTag }),
-      /* @__PURE__ */ jsxs("span", { className: "text-xs text-muted-foreground ml-auto", children: [
+      /* @__PURE__ */ jsxs("span", { className: "text-[11px] text-muted-foreground ml-auto hidden sm:inline", children: [
         timeline?.length || 0,
-        " msgs"
+        " mensagens"
       ] }),
-      /* @__PURE__ */ jsx("button", { onClick: () => refreshTl(), className: "px-2 py-1 rounded-md border border-input text-[11px] text-muted-foreground hover:bg-accent", children: "Atualizar" })
+      /* @__PURE__ */ jsx("button", { onClick: () => refreshTl(), className: "p-1.5 rounded-md border border-input text-muted-foreground hover:bg-accent transition-colors", title: "Atualizar", children: /* @__PURE__ */ jsxs("svg", { xmlns: "http://www.w3.org/2000/svg", width: "14", height: "14", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", children: [
+        /* @__PURE__ */ jsx("path", { d: "M21 12a9 9 0 11-6.219-8.56" }),
+        /* @__PURE__ */ jsx("polyline", { points: "21 3 21 9 15 9" })
+      ] }) })
     ] }),
     /* @__PURE__ */ jsxs("div", { className: "flex-1 flex overflow-hidden", children: [
       /* @__PURE__ */ jsxs("div", { className: "flex-1 flex flex-col overflow-hidden bg-background", children: [
@@ -376,7 +381,7 @@ function CarouselSlider({ images }) {
     lightboxId && /* @__PURE__ */ jsx("div", { className: "fixed inset-0 bg-black/90 flex items-center justify-center z-50 cursor-pointer p-4", onClick: () => setLightboxId(null), children: /* @__PURE__ */ jsx(LazyImage, { attachmentId: lightboxId, alt: "", className: "max-w-[90vw] max-h-[90vh] object-contain rounded-lg" }) })
   ] });
 }
-function CarouselFeedCard({ carousel, companyId, onRefresh }) {
+function CarouselFeedCard({ carousel, companyId, companyPrefix, onRefresh }) {
   const [showReject, setShowReject] = useState(false);
   const [acting, setActing] = useState(false);
   const approveAction = usePluginAction("approve-piece");
@@ -439,35 +444,58 @@ function CarouselFeedCard({ carousel, companyId, onRefresh }) {
       ] }),
       /* @__PURE__ */ jsx(CarouselSlider, { images: carousel.images }),
       /* @__PURE__ */ jsxs("div", { className: "px-4 py-3 flex items-center gap-2 border-t border-border flex-wrap", children: [
-        carousel.reviewStatus !== "approved" && /* @__PURE__ */ jsxs(
-          "button",
-          {
-            onClick: handleApprove,
-            disabled: acting,
-            className: "inline-flex items-center gap-1.5 rounded-md text-sm font-medium h-9 px-4 border border-green-500/30 text-green-500 bg-green-500/10 hover:bg-green-500/20 disabled:opacity-50 transition-colors",
-            children: [
-              /* @__PURE__ */ jsx("svg", { width: "14", height: "14", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2.5", children: /* @__PURE__ */ jsx("path", { d: "M20 6L9 17l-5-5" }) }),
-              "Aprovar carrossel"
-            ]
-          }
-        ),
-        carousel.reviewStatus !== "rejected" && carousel.reviewStatus !== "approved" && /* @__PURE__ */ jsxs(
-          "button",
-          {
-            onClick: () => setShowReject(true),
-            disabled: acting,
-            className: "inline-flex items-center gap-1.5 rounded-md text-sm font-medium h-9 px-4 border border-red-500/30 text-red-500 bg-red-500/10 hover:bg-red-500/20 disabled:opacity-50 transition-colors",
-            children: [
-              /* @__PURE__ */ jsx("svg", { width: "14", height: "14", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2.5", children: /* @__PURE__ */ jsx("path", { d: "M18 6L6 18M6 6l12 12" }) }),
-              "Reprovar"
-            ]
-          }
-        ),
+        carousel.reviewStatus !== "approved" && carousel.reviewStatus !== "rejected" && /* @__PURE__ */ jsxs(Fragment, { children: [
+          /* @__PURE__ */ jsxs(
+            "button",
+            {
+              onClick: handleApprove,
+              disabled: acting,
+              className: "inline-flex items-center gap-1.5 rounded-md text-sm font-medium h-9 px-4 border border-green-500/30 text-green-500 bg-green-500/10 hover:bg-green-500/20 disabled:opacity-50 transition-colors",
+              children: [
+                /* @__PURE__ */ jsx("svg", { width: "14", height: "14", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2.5", children: /* @__PURE__ */ jsx("path", { d: "M20 6L9 17l-5-5" }) }),
+                "Aprovar carrossel"
+              ]
+            }
+          ),
+          /* @__PURE__ */ jsxs(
+            "button",
+            {
+              onClick: () => setShowReject(true),
+              disabled: acting,
+              className: "inline-flex items-center gap-1.5 rounded-md text-sm font-medium h-9 px-4 border border-red-500/30 text-red-500 bg-red-500/10 hover:bg-red-500/20 disabled:opacity-50 transition-colors",
+              children: [
+                /* @__PURE__ */ jsx("svg", { width: "14", height: "14", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2.5", children: /* @__PURE__ */ jsx("path", { d: "M18 6L6 18M6 6l12 12" }) }),
+                "Reprovar"
+              ]
+            }
+          )
+        ] }),
         carousel.reviewStatus === "approved" && /* @__PURE__ */ jsxs("span", { className: "text-xs text-green-500 font-medium flex items-center gap-1", children: [
           /* @__PURE__ */ jsx("svg", { width: "14", height: "14", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2.5", children: /* @__PURE__ */ jsx("path", { d: "M20 6L9 17l-5-5" }) }),
           "Aprovado para publica\xE7\xE3o"
         ] }),
-        carousel.reviewStatus === "rejected" && /* @__PURE__ */ jsx("span", { className: "text-xs text-red-400", children: "Feedback enviado \u2014 aguardando nova vers\xE3o do agente" })
+        carousel.reviewStatus === "rejected" && /* @__PURE__ */ jsxs("div", { className: "flex items-center gap-3 flex-wrap", children: [
+          /* @__PURE__ */ jsxs("span", { className: "text-xs text-red-400 flex items-center gap-1", children: [
+            /* @__PURE__ */ jsx("svg", { width: "14", height: "14", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", children: /* @__PURE__ */ jsx("path", { d: "M18 6L6 18M6 6l12 12" }) }),
+            "Reprovado \u2014 feedback enviado ao agente"
+          ] }),
+          /* @__PURE__ */ jsxs(
+            "a",
+            {
+              href: `/${companyPrefix || "JUS"}/issues/JUS-${carousel.issueNumber}`,
+              className: "inline-flex items-center gap-1.5 rounded-md text-xs font-medium h-8 px-3 border border-primary/30 text-primary bg-primary/10 hover:bg-primary/20 transition-colors",
+              children: [
+                /* @__PURE__ */ jsxs("svg", { width: "12", height: "12", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", children: [
+                  /* @__PURE__ */ jsx("path", { d: "M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6" }),
+                  /* @__PURE__ */ jsx("polyline", { points: "15 3 21 3 21 9" }),
+                  /* @__PURE__ */ jsx("line", { x1: "10", y1: "14", x2: "21", y2: "3" })
+                ] }),
+                "Ver issue JUS-",
+                carousel.issueNumber
+              ]
+            }
+          )
+        ] })
       ] })
     ] }),
     showReject && /* @__PURE__ */ jsx(RejectModal, { onClose: () => setShowReject(false), onSubmit: handleReject })
@@ -500,18 +528,27 @@ function GalleryPage() {
     { key: "rejected", label: "Reprovados" }
   ];
   if (!companyId) return /* @__PURE__ */ jsx("div", { className: "p-8 text-muted-foreground", children: "Selecione uma empresa." });
-  return /* @__PURE__ */ jsxs("div", { className: "flex flex-col h-[calc(100vh-48px)] text-foreground overflow-hidden", children: [
-    /* @__PURE__ */ jsxs("div", { className: "px-3 py-2.5 border-b border-border flex items-center gap-2 flex-wrap bg-card", children: [
-      /* @__PURE__ */ jsx("span", { className: "text-base font-bold mr-1", children: "# galeria" }),
+  return /* @__PURE__ */ jsxs("div", { className: "flex flex-col h-full text-foreground overflow-hidden", children: [
+    /* @__PURE__ */ jsxs("div", { className: "px-4 py-2 border-b border-border flex items-center gap-2 flex-wrap bg-card/80 backdrop-blur-sm sticky top-0 z-10", children: [
+      /* @__PURE__ */ jsxs("svg", { xmlns: "http://www.w3.org/2000/svg", width: "16", height: "16", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", className: "text-muted-foreground shrink-0", children: [
+        /* @__PURE__ */ jsx("rect", { x: "3", y: "3", width: "18", height: "18", rx: "2" }),
+        /* @__PURE__ */ jsx("circle", { cx: "8.5", cy: "8.5", r: "1.5" }),
+        /* @__PURE__ */ jsx("path", { d: "M21 15l-5-5L5 21" })
+      ] }),
+      /* @__PURE__ */ jsx("span", { className: "text-sm font-semibold mr-2", children: "Galeria" }),
+      /* @__PURE__ */ jsx("div", { className: "h-4 w-px bg-border hidden sm:block" }),
       /* @__PURE__ */ jsx(DropdownFilter, { label: "Editoria", value: galFilter, options: tagOptions, onChange: setGalFilter }),
       /* @__PURE__ */ jsx(DropdownFilter, { label: "Status", value: statusFilter, options: statusOptions, onChange: setStatusFilter }),
-      /* @__PURE__ */ jsxs("span", { className: "text-xs text-muted-foreground ml-auto", children: [
+      /* @__PURE__ */ jsxs("span", { className: "text-[11px] text-muted-foreground ml-auto hidden sm:inline", children: [
         filtered.length,
         " carross\xE9is"
       ] }),
-      /* @__PURE__ */ jsx("button", { onClick: () => refreshGal(), className: "px-2 py-1 rounded-md border border-input text-[11px] text-muted-foreground hover:bg-accent", children: "Atualizar" })
+      /* @__PURE__ */ jsx("button", { onClick: () => refreshGal(), className: "p-1.5 rounded-md border border-input text-muted-foreground hover:bg-accent transition-colors", title: "Atualizar", children: /* @__PURE__ */ jsxs("svg", { xmlns: "http://www.w3.org/2000/svg", width: "14", height: "14", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", children: [
+        /* @__PURE__ */ jsx("path", { d: "M21 12a9 9 0 11-6.219-8.56" }),
+        /* @__PURE__ */ jsx("polyline", { points: "21 3 21 9 15 9" })
+      ] }) })
     ] }),
-    /* @__PURE__ */ jsx("div", { className: "flex-1 overflow-y-auto", children: /* @__PURE__ */ jsx("div", { className: "max-w-2xl mx-auto p-3 md:p-4 space-y-4", children: galLoading ? /* @__PURE__ */ jsx("div", { className: "text-center text-muted-foreground text-sm p-8", children: "Carregando carross\xE9is..." }) : !filtered.length ? /* @__PURE__ */ jsx("div", { className: "text-center text-muted-foreground text-sm p-12", children: "Nenhum carrossel para revis\xE3o." }) : filtered.map((c) => /* @__PURE__ */ jsx(CarouselFeedCard, { carousel: c, companyId, onRefresh: refreshGal }, c.issueId)) }) })
+    /* @__PURE__ */ jsx("div", { className: "flex-1 overflow-y-auto", children: /* @__PURE__ */ jsx("div", { className: "max-w-2xl mx-auto p-3 md:p-4 space-y-4", children: galLoading ? /* @__PURE__ */ jsx("div", { className: "text-center text-muted-foreground text-sm p-8", children: "Carregando carross\xE9is..." }) : !filtered.length ? /* @__PURE__ */ jsx("div", { className: "text-center text-muted-foreground text-sm p-12", children: "Nenhum carrossel para revis\xE3o." }) : filtered.map((c) => /* @__PURE__ */ jsx(CarouselFeedCard, { carousel: c, companyId, companyPrefix: ctx?.companyPrefix || void 0, onRefresh: refreshGal }, c.issueId)) }) })
   ] });
 }
 function TimelineSidebar({ context }) {
