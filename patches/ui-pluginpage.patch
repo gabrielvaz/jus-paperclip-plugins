@@ -1,0 +1,32 @@
+diff --git a/ui/src/pages/PluginPage.tsx b/ui/src/pages/PluginPage.tsx
+index 687e0814..682c248e 100644
+--- a/ui/src/pages/PluginPage.tsx
++++ b/ui/src/pages/PluginPage.tsx
+@@ -136,21 +136,11 @@ export function PluginPage() {
+   }
+ 
+   return (
+-    <div className="space-y-4">
+-      <div className="flex items-center gap-2">
+-        <Button variant="ghost" size="sm" asChild>
+-          <Link to={companyPrefix ? `/${companyPrefix}/dashboard` : "/dashboard"}>
+-            <ArrowLeft className="h-4 w-4 mr-1" />
+-            Back
+-          </Link>
+-        </Button>
+-      </div>
+-      <PluginSlotMount
+-        slot={pageSlot}
+-        context={context}
+-        className="min-h-[200px]"
+-        missingBehavior="placeholder"
+-      />
+-    </div>
++    <PluginSlotMount
++      slot={pageSlot}
++      context={context}
++      className="min-h-[200px]"
++      missingBehavior="placeholder"
++    />
+   );
+ }

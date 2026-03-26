@@ -6,5 +6,13 @@ export declare function TimelineSidebar({ context }: {
 export declare function GallerySidebar({ context }: {
     context?: any;
 }): import("react/jsx-runtime").JSX.Element;
+export declare function CalendarSidebar({ context }: {
+    context?: any;
+}): import("react/jsx-runtime").JSX.Element;
+export declare function MetricsSidebar({ context }: {
+    context?: any;
+}): import("react/jsx-runtime").JSX.Element;
+export declare function CalendarPage(): import("react/jsx-runtime").JSX.Element;
+export declare function MetricsPage(): import("react/jsx-runtime").JSX.Element;
 export declare function CreativeHubDashboardWidget(): import("react/jsx-runtime").JSX.Element;
 //# sourceMappingURL=index.d.ts.map

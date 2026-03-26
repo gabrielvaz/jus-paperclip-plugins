@@ -192,6 +192,54 @@ function LazyImage({ attachmentId, alt, className }) {
   if (!src) return /* @__PURE__ */ jsx("div", { className: `${className || ""} bg-accent/10 flex items-center justify-center text-muted-foreground text-xs`, children: "Erro" });
   return /* @__PURE__ */ jsx("img", { src, alt, className, loading: "lazy" });
 }
+function BriefingModal({ onClose, onSubmit }) {
+  const [form, setForm] = useState({ editoria: "Seus Direitos", formato: "Carrossel Instagram", canal: "Instagram", publico: "Cidad\xE3o (Ana)", data: "", tema: "", descricao: "" });
+  const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
+  const editorias = ["Seus Direitos", "Consulta Processual", "Jus IA", "Employer Branding", "Institucional"];
+  const formatos = ["Carrossel Instagram", "Carrossel LinkedIn", "Ads Meta (feed)", "Ads Meta (stories)", "Email marketing", "Card \xFAnico"];
+  const canais = ["Instagram", "LinkedIn", "Instagram + LinkedIn", "Meta Ads", "Email"];
+  const publicos = ["Cidad\xE3o (Ana)", "Advogado (Pedro)", "Estudante (Mariana)", "Candidato tech"];
+  return /* @__PURE__ */ jsx("div", { className: "fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4", onClick: onClose, children: /* @__PURE__ */ jsxs("div", { className: "bg-card border border-border rounded-xl shadow-xl max-w-lg w-full p-5 space-y-3 max-h-[90vh] overflow-y-auto", onClick: (e) => e.stopPropagation(), children: [
+    /* @__PURE__ */ jsx("h3", { className: "text-base font-bold", children: "Novo briefing" }),
+    /* @__PURE__ */ jsx("p", { className: "text-xs text-muted-foreground", children: "Preencha os detalhes e o Orchestrator iniciar\xE1 a produ\xE7\xE3o automaticamente." }),
+    /* @__PURE__ */ jsxs("div", { className: "grid grid-cols-2 gap-3", children: [
+      /* @__PURE__ */ jsxs("div", { children: [
+        /* @__PURE__ */ jsx("label", { className: "text-[11px] font-medium text-muted-foreground", children: "Editoria" }),
+        /* @__PURE__ */ jsx("select", { value: form.editoria, onChange: (e) => set("editoria", e.target.value), className: "w-full mt-1 h-9 rounded-md border border-input bg-background px-2 text-sm", children: editorias.map((e) => /* @__PURE__ */ jsx("option", { children: e }, e)) })
+      ] }),
+      /* @__PURE__ */ jsxs("div", { children: [
+        /* @__PURE__ */ jsx("label", { className: "text-[11px] font-medium text-muted-foreground", children: "Formato" }),
+        /* @__PURE__ */ jsx("select", { value: form.formato, onChange: (e) => set("formato", e.target.value), className: "w-full mt-1 h-9 rounded-md border border-input bg-background px-2 text-sm", children: formatos.map((f) => /* @__PURE__ */ jsx("option", { children: f }, f)) })
+      ] }),
+      /* @__PURE__ */ jsxs("div", { children: [
+        /* @__PURE__ */ jsx("label", { className: "text-[11px] font-medium text-muted-foreground", children: "Canal" }),
+        /* @__PURE__ */ jsx("select", { value: form.canal, onChange: (e) => set("canal", e.target.value), className: "w-full mt-1 h-9 rounded-md border border-input bg-background px-2 text-sm", children: canais.map((c) => /* @__PURE__ */ jsx("option", { children: c }, c)) })
+      ] }),
+      /* @__PURE__ */ jsxs("div", { children: [
+        /* @__PURE__ */ jsx("label", { className: "text-[11px] font-medium text-muted-foreground", children: "P\xFAblico" }),
+        /* @__PURE__ */ jsx("select", { value: form.publico, onChange: (e) => set("publico", e.target.value), className: "w-full mt-1 h-9 rounded-md border border-input bg-background px-2 text-sm", children: publicos.map((p) => /* @__PURE__ */ jsx("option", { children: p }, p)) })
+      ] }),
+      /* @__PURE__ */ jsxs("div", { className: "col-span-2", children: [
+        /* @__PURE__ */ jsx("label", { className: "text-[11px] font-medium text-muted-foreground", children: "Data de publica\xE7\xE3o" }),
+        /* @__PURE__ */ jsx("input", { type: "date", value: form.data, onChange: (e) => set("data", e.target.value), className: "w-full mt-1 h-9 rounded-md border border-input bg-background px-2 text-sm" })
+      ] })
+    ] }),
+    /* @__PURE__ */ jsxs("div", { children: [
+      /* @__PURE__ */ jsx("label", { className: "text-[11px] font-medium text-muted-foreground", children: "Tema / T\xEDtulo" }),
+      /* @__PURE__ */ jsx("input", { value: form.tema, onChange: (e) => set("tema", e.target.value), placeholder: "Ex: Direito de arrependimento em compras online", className: "w-full mt-1 h-9 rounded-md border border-input bg-background px-3 text-sm" })
+    ] }),
+    /* @__PURE__ */ jsxs("div", { children: [
+      /* @__PURE__ */ jsx("label", { className: "text-[11px] font-medium text-muted-foreground", children: "Descri\xE7\xE3o / Direcionamento" }),
+      /* @__PURE__ */ jsx("textarea", { value: form.descricao, onChange: (e) => set("descricao", e.target.value), placeholder: "Descreva o que espera da pe\xE7a, refer\xEAncias, tom desejado...", rows: 3, className: "w-full mt-1 rounded-md border border-input bg-background px-3 py-2 text-sm resize-y" })
+    ] }),
+    /* @__PURE__ */ jsxs("div", { className: "flex gap-2 justify-end pt-2", children: [
+      /* @__PURE__ */ jsx("button", { onClick: onClose, className: "px-4 py-2 rounded-md text-sm border border-input text-muted-foreground hover:bg-accent", children: "Cancelar" }),
+      /* @__PURE__ */ jsx("button", { onClick: () => {
+        if (form.tema.trim()) onSubmit(form);
+      }, disabled: !form.tema.trim(), className: "px-4 py-2 rounded-md text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50", children: "Criar briefing" })
+    ] })
+  ] }) });
+}
 function TimelinePage() {
   const ctx = useHostContext();
   const companyId = ctx?.companyId;
@@ -200,11 +248,24 @@ function TimelinePage() {
   const [filterType, setFilterType] = useState("all");
   const [filterTag, setFilterTag] = useState("all");
   const [threadIssueId, setThreadIssueId] = useState(null);
+  const [showBriefing, setShowBriefing] = useState(false);
   const { data: agents } = usePluginData("agents", { companyId });
   const { data: timeline, loading: tlLoading, refresh: refreshTl } = usePluginData("timeline", { companyId, filterAgent, filterType, filterTag, limit: 150 });
   const { data: thread, refresh: refreshThread } = usePluginData("thread", { issueId: threadIssueId, companyId });
   const sendMessage = usePluginAction("send-message");
   const sendBroadcast = usePluginAction("send-broadcast");
+  const createBriefing = usePluginAction("create-briefing");
+  const handleBriefing = useCallback(async (data) => {
+    if (!companyId) return;
+    try {
+      await createBriefing({ companyId, ...data });
+      toast?.({ title: `Briefing criado: ${data.tema}`, tone: "success" });
+      setShowBriefing(false);
+      refreshTl();
+    } catch (e) {
+      toast?.({ title: "Erro ao criar briefing", body: e.message, tone: "error" });
+    }
+  }, [companyId, createBriefing, toast, refreshTl]);
   const handleSend = useCallback(async (body, issueId) => {
     if (!companyId) return;
     try {
@@ -253,11 +314,16 @@ function TimelinePage() {
         timeline?.length || 0,
         " mensagens"
       ] }),
+      /* @__PURE__ */ jsxs("button", { onClick: () => setShowBriefing(true), className: "inline-flex items-center gap-1.5 rounded-md text-xs font-medium h-8 px-3 bg-primary text-primary-foreground hover:bg-primary/90 transition-colors", children: [
+        /* @__PURE__ */ jsx("svg", { width: "12", height: "12", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2.5", children: /* @__PURE__ */ jsx("path", { d: "M12 5v14M5 12h14" }) }),
+        "Novo briefing"
+      ] }),
       /* @__PURE__ */ jsx("button", { onClick: () => refreshTl(), className: "p-1.5 rounded-md border border-input text-muted-foreground hover:bg-accent transition-colors", title: "Atualizar", children: /* @__PURE__ */ jsxs("svg", { xmlns: "http://www.w3.org/2000/svg", width: "14", height: "14", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", children: [
         /* @__PURE__ */ jsx("path", { d: "M21 12a9 9 0 11-6.219-8.56" }),
         /* @__PURE__ */ jsx("polyline", { points: "21 3 21 9 15 9" })
       ] }) })
     ] }),
+    showBriefing && /* @__PURE__ */ jsx(BriefingModal, { onClose: () => setShowBriefing(false), onSubmit: handleBriefing }),
     /* @__PURE__ */ jsxs("div", { className: "flex-1 flex overflow-hidden", children: [
       /* @__PURE__ */ jsxs("div", { className: "flex-1 flex flex-col overflow-hidden bg-background", children: [
         /* @__PURE__ */ jsx("div", { className: "flex-1 overflow-y-auto flex flex-col-reverse", children: tlLoading ? /* @__PURE__ */ jsx("div", { className: "p-8 text-center text-muted-foreground text-sm", children: "Carregando..." }) : !timeline?.length ? /* @__PURE__ */ jsx("div", { className: "p-8 text-center text-muted-foreground text-sm", children: "Nenhuma mensagem. Envie algo ou mencione um agente com @." }) : [...timeline].reverse().map((m) => /* @__PURE__ */ jsx(Message, { msg: m, onOpenThread: setThreadIssueId }, m.id)) }),
@@ -297,20 +363,30 @@ var REJECTION_REASONS = [
   { key: "missing_cta", label: "CTA ausente ou gen\xE9rico" },
   { key: "wrong_format", label: "Formato ou dimens\xE3o incorreta" }
 ];
-function RejectModal({ onClose, onSubmit }) {
+function RejectModal({ onClose, onSubmit, onDiscard }) {
   const [selected, setSelected] = useState([]);
   const [note, setNote] = useState("");
+  const [discard, setDiscard] = useState(false);
   const toggle = (key) => setSelected((s) => s.includes(key) ? s.filter((k) => k !== key) : [...s, key]);
+  const handleSubmit = () => {
+    if (discard) {
+      onDiscard();
+      return;
+    }
+    if (selected.length || note.trim()) onSubmit(selected, note);
+  };
   return /* @__PURE__ */ jsx("div", { className: "fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4", onClick: onClose, children: /* @__PURE__ */ jsxs("div", { className: "bg-card border border-border rounded-xl shadow-xl max-w-md w-full p-5 space-y-4", onClick: (e) => e.stopPropagation(), children: [
     /* @__PURE__ */ jsxs("div", { children: [
       /* @__PURE__ */ jsx("h3", { className: "text-base font-bold", children: "Reprovar carrossel" }),
-      /* @__PURE__ */ jsx("p", { className: "text-xs text-muted-foreground mt-1", children: "Selecione os motivos e descreva o que o agente deve corrigir na pr\xF3xima vers\xE3o." })
+      /* @__PURE__ */ jsx("p", { className: "text-xs text-muted-foreground mt-1", children: "Selecione os motivos e descreva o que o agente deve corrigir." })
     ] }),
     /* @__PURE__ */ jsx("div", { className: "space-y-1.5", children: REJECTION_REASONS.map((r) => /* @__PURE__ */ jsxs(
       "button",
       {
-        onClick: () => toggle(r.key),
-        className: `flex items-center gap-2 w-full px-3 py-2 rounded-md text-sm text-left transition-colors border ${selected.includes(r.key) ? "border-red-500/50 bg-red-500/10 text-foreground font-medium" : "border-border hover:bg-accent/50 text-muted-foreground"}`,
+        onClick: () => {
+          if (!discard) toggle(r.key);
+        },
+        className: `flex items-center gap-2 w-full px-3 py-2 rounded-md text-sm text-left transition-colors border ${discard ? "opacity-40 pointer-events-none border-border" : selected.includes(r.key) ? "border-red-500/50 bg-red-500/10 text-foreground font-medium" : "border-border hover:bg-accent/50 text-muted-foreground"}`,
         children: [
           /* @__PURE__ */ jsx("span", { className: `w-4 h-4 rounded border-2 flex items-center justify-center text-[10px] shrink-0 ${selected.includes(r.key) ? "border-red-500 bg-red-500 text-white" : "border-muted-foreground/40"}`, children: selected.includes(r.key) && "x" }),
           r.label
@@ -323,22 +399,33 @@ function RejectModal({ onClose, onSubmit }) {
       {
         value: note,
         onChange: (e) => setNote(e.target.value),
-        placeholder: "Direcionamento para o agente criar nova vers\xE3o...",
-        rows: 3,
-        className: "w-full rounded-md border border-input bg-background px-3 py-2 text-sm resize-y focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] outline-none"
+        placeholder: discard ? "Motivo do descarte (opcional)..." : "Direcionamento para o agente criar nova vers\xE3o...",
+        rows: 2,
+        disabled: discard,
+        className: `w-full rounded-md border border-input bg-background px-3 py-2 text-sm resize-y focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] outline-none ${discard ? "opacity-40" : ""}`
       }
     ),
+    /* @__PURE__ */ jsxs(
+      "button",
+      {
+        onClick: () => setDiscard(!discard),
+        className: `flex items-center gap-2 w-full px-3 py-2.5 rounded-md text-sm text-left transition-colors border ${discard ? "border-red-800 bg-red-950 text-red-400 font-medium" : "border-border hover:bg-red-950/30 text-muted-foreground"}`,
+        children: [
+          /* @__PURE__ */ jsx("span", { className: `w-4 h-4 rounded border-2 flex items-center justify-center text-[10px] shrink-0 ${discard ? "border-red-600 bg-red-600 text-white" : "border-muted-foreground/40"}`, children: discard && "x" }),
+          "Descartar definitivamente \u2014 arquivar sem enviar feedback"
+        ]
+      }
+    ),
+    discard && /* @__PURE__ */ jsx("p", { className: "text-[11px] text-red-400/80", children: "A issue ser\xE1 cancelada e arquivada. O agente n\xE3o ser\xE1 notificado." }),
     /* @__PURE__ */ jsxs("div", { className: "flex gap-2 justify-end", children: [
       /* @__PURE__ */ jsx("button", { onClick: onClose, className: "px-4 py-2 rounded-md text-sm border border-input text-muted-foreground hover:bg-accent", children: "Cancelar" }),
       /* @__PURE__ */ jsx(
         "button",
         {
-          onClick: () => {
-            if (selected.length || note.trim()) onSubmit(selected, note);
-          },
-          disabled: !selected.length && !note.trim(),
-          className: "px-4 py-2 rounded-md text-sm font-medium bg-red-500 text-white hover:bg-red-600 disabled:opacity-50",
-          children: "Reprovar e enviar feedback"
+          onClick: handleSubmit,
+          disabled: !discard && !selected.length && !note.trim(),
+          className: `px-4 py-2 rounded-md text-sm font-medium disabled:opacity-50 ${discard ? "bg-red-900 text-red-300 hover:bg-red-800" : "bg-red-500 text-white hover:bg-red-600"}`,
+          children: discard ? "Descartar e arquivar" : "Reprovar e enviar feedback"
         }
       )
     ] })
@@ -381,23 +468,24 @@ function CarouselSlider({ images }) {
     lightboxId && /* @__PURE__ */ jsx("div", { className: "fixed inset-0 bg-black/90 flex items-center justify-center z-50 cursor-pointer p-4", onClick: () => setLightboxId(null), children: /* @__PURE__ */ jsx(LazyImage, { attachmentId: lightboxId, alt: "", className: "max-w-[90vw] max-h-[90vh] object-contain rounded-lg" }) })
   ] });
 }
-function CarouselFeedCard({ carousel, companyId, companyPrefix, onRefresh }) {
+function CarouselFeedCard({ carousel, companyId, companyPrefix, onRemove }) {
   const [showReject, setShowReject] = useState(false);
   const [acting, setActing] = useState(false);
   const approveAction = usePluginAction("approve-piece");
   const rejectAction = usePluginAction("reject-piece");
+  const discardAction = usePluginAction("discard-piece");
   const toast = usePluginToast();
   const handleApprove = useCallback(async () => {
     setActing(true);
     try {
       await approveAction({ issueId: carousel.issueId, companyId, note: "Carrossel aprovado para publica\xE7\xE3o." });
       toast?.({ title: "Carrossel aprovado", tone: "success" });
-      onRefresh();
+      onRemove(carousel.issueId);
     } catch (e) {
       toast?.({ title: "Erro", body: e.message, tone: "error" });
     }
     setActing(false);
-  }, [approveAction, carousel, companyId, toast, onRefresh]);
+  }, [approveAction, carousel, companyId, toast, onRemove]);
   const handleReject = useCallback(async (reasons, note) => {
     setActing(true);
     const reasonLabels = reasons.map((r) => REJECTION_REASONS.find((rr) => rr.key === r)?.label || r);
@@ -405,12 +493,24 @@ function CarouselFeedCard({ carousel, companyId, companyPrefix, onRefresh }) {
       await rejectAction({ issueId: carousel.issueId, companyId, reasons: reasonLabels, note });
       toast?.({ title: "Feedback enviado ao agente", tone: "success" });
       setShowReject(false);
-      onRefresh();
+      onRemove(carousel.issueId);
     } catch (e) {
       toast?.({ title: "Erro", body: e.message, tone: "error" });
     }
     setActing(false);
-  }, [rejectAction, carousel, companyId, toast, onRefresh]);
+  }, [rejectAction, carousel, companyId, toast, onRemove]);
+  const handleDiscard = useCallback(async () => {
+    setActing(true);
+    try {
+      await discardAction({ issueId: carousel.issueId, companyId });
+      toast?.({ title: "Pe\xE7a descartada e arquivada", tone: "success" });
+      setShowReject(false);
+      onRemove(carousel.issueId);
+    } catch (e) {
+      toast?.({ title: "Erro", body: e.message, tone: "error" });
+    }
+    setActing(false);
+  }, [discardAction, carousel, companyId, toast, onRemove]);
   const statusBadge = carousel.reviewStatus === "approved" ? "text-green-500 bg-green-500/10 border-green-500/30" : carousel.reviewStatus === "rejected" ? "text-red-500 bg-red-500/10 border-red-500/30" : "text-muted-foreground bg-muted/50 border-border";
   const statusLabel = carousel.reviewStatus === "approved" ? "Aprovado" : carousel.reviewStatus === "rejected" ? "Reprovado" : "Aguardando revis\xE3o";
   const typeLabel = carousel.images.length > 1 ? `Carrossel \u2014 ${carousel.images.length} cards` : "Card \xFAnico";
@@ -498,35 +598,55 @@ function CarouselFeedCard({ carousel, companyId, companyPrefix, onRefresh }) {
         ] })
       ] })
     ] }),
-    showReject && /* @__PURE__ */ jsx(RejectModal, { onClose: () => setShowReject(false), onSubmit: handleReject })
+    showReject && /* @__PURE__ */ jsx(RejectModal, { onClose: () => setShowReject(false), onSubmit: handleReject, onDiscard: handleDiscard })
   ] });
 }
 function GalleryPage() {
   const ctx = useHostContext();
   const companyId = ctx?.companyId;
   const { data: carousels, loading: galLoading, refresh: refreshGal } = usePluginData("gallery", { companyId });
+  const [removedIds, setRemovedIds] = useState(/* @__PURE__ */ new Set());
   const [galFilter, setGalFilter] = useState("all");
-  const [statusFilter, setStatusFilter] = useState("all");
+  const [activeTab, setActiveTab] = useState("pending");
+  const handleRemove = useCallback((issueId) => {
+    setRemovedIds((prev) => new Set(prev).add(issueId));
+  }, []);
+  const handleStatusChange = useCallback((issueId, newStatus) => {
+    setRemovedIds((prev) => new Set(prev).add(issueId));
+  }, []);
   const galTags = useMemo(() => Array.from(new Set((carousels || []).map((c) => c.tag).filter(Boolean))), [carousels]);
+  const counts = useMemo(() => {
+    const all = (carousels || []).filter((c) => !removedIds.has(c.issueId) && (galFilter === "all" || c.tag === galFilter));
+    return {
+      pending: all.filter((c) => c.reviewStatus !== "approved" && c.reviewStatus !== "rejected" && c.reviewStatus !== "discarded").length,
+      rejected: all.filter((c) => c.reviewStatus === "rejected").length,
+      approved: all.filter((c) => c.reviewStatus === "approved").length
+    };
+  }, [carousels, galFilter]);
   const filtered = useMemo(() => {
     return (carousels || []).filter((c) => {
+      if (removedIds.has(c.issueId)) return false;
       if (galFilter !== "all" && c.tag !== galFilter) return false;
-      if (statusFilter === "pending" && c.reviewStatus !== "pending") return false;
-      if (statusFilter === "approved" && c.reviewStatus !== "approved") return false;
-      if (statusFilter === "rejected" && c.reviewStatus !== "rejected") return false;
+      if (activeTab === "pending") return c.reviewStatus !== "approved" && c.reviewStatus !== "rejected" && c.reviewStatus !== "discarded";
+      if (activeTab === "approved") return c.reviewStatus === "approved";
+      if (activeTab === "rejected") return c.reviewStatus === "rejected";
       return true;
     });
-  }, [carousels, galFilter, statusFilter]);
+  }, [carousels, galFilter, activeTab, removedIds]);
   const tagOptions = useMemo(() => [
     { key: "all", label: "Todas" },
     ...galTags.map((t) => ({ key: t, label: t, color: tc(t) }))
   ], [galTags]);
-  const statusOptions = [
-    { key: "all", label: "Todos" },
-    { key: "pending", label: "Aguardando" },
-    { key: "approved", label: "Aprovados" },
-    { key: "rejected", label: "Reprovados" }
+  const tabs = [
+    { key: "pending", label: "Aguardando", count: counts.pending, color: "text-muted-foreground", activeColor: "text-yellow-500 border-yellow-500" },
+    { key: "rejected", label: "Reprovados", count: counts.rejected, color: "text-muted-foreground", activeColor: "text-red-500 border-red-500" },
+    { key: "approved", label: "Aprovadas", count: counts.approved, color: "text-muted-foreground", activeColor: "text-green-500 border-green-500" }
   ];
+  const emptyMessages = {
+    pending: "Nenhuma pe\xE7a aguardando revis\xE3o.",
+    rejected: "Nenhuma pe\xE7a reprovada no momento.",
+    approved: "Nenhuma pe\xE7a aprovada ainda."
+  };
   if (!companyId) return /* @__PURE__ */ jsx("div", { className: "p-8 text-muted-foreground", children: "Selecione uma empresa." });
   return /* @__PURE__ */ jsxs("div", { className: "flex flex-col h-full text-foreground overflow-hidden", children: [
     /* @__PURE__ */ jsxs("div", { className: "px-4 py-2 border-b border-border flex items-center gap-2 flex-wrap bg-card/80 backdrop-blur-sm sticky top-0 z-10", children: [
@@ -538,17 +658,24 @@ function GalleryPage() {
       /* @__PURE__ */ jsx("span", { className: "text-sm font-semibold mr-2", children: "Galeria" }),
       /* @__PURE__ */ jsx("div", { className: "h-4 w-px bg-border hidden sm:block" }),
       /* @__PURE__ */ jsx(DropdownFilter, { label: "Editoria", value: galFilter, options: tagOptions, onChange: setGalFilter }),
-      /* @__PURE__ */ jsx(DropdownFilter, { label: "Status", value: statusFilter, options: statusOptions, onChange: setStatusFilter }),
-      /* @__PURE__ */ jsxs("span", { className: "text-[11px] text-muted-foreground ml-auto hidden sm:inline", children: [
-        filtered.length,
-        " carross\xE9is"
-      ] }),
-      /* @__PURE__ */ jsx("button", { onClick: () => refreshGal(), className: "p-1.5 rounded-md border border-input text-muted-foreground hover:bg-accent transition-colors", title: "Atualizar", children: /* @__PURE__ */ jsxs("svg", { xmlns: "http://www.w3.org/2000/svg", width: "14", height: "14", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", children: [
+      /* @__PURE__ */ jsx("button", { onClick: () => refreshGal(), className: "ml-auto p-1.5 rounded-md border border-input text-muted-foreground hover:bg-accent transition-colors", title: "Atualizar", children: /* @__PURE__ */ jsxs("svg", { xmlns: "http://www.w3.org/2000/svg", width: "14", height: "14", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", children: [
         /* @__PURE__ */ jsx("path", { d: "M21 12a9 9 0 11-6.219-8.56" }),
         /* @__PURE__ */ jsx("polyline", { points: "21 3 21 9 15 9" })
       ] }) })
     ] }),
-    /* @__PURE__ */ jsx("div", { className: "flex-1 overflow-y-auto", children: /* @__PURE__ */ jsx("div", { className: "max-w-2xl mx-auto p-3 md:p-4 space-y-4", children: galLoading ? /* @__PURE__ */ jsx("div", { className: "text-center text-muted-foreground text-sm p-8", children: "Carregando carross\xE9is..." }) : !filtered.length ? /* @__PURE__ */ jsx("div", { className: "text-center text-muted-foreground text-sm p-12", children: "Nenhum carrossel para revis\xE3o." }) : filtered.map((c) => /* @__PURE__ */ jsx(CarouselFeedCard, { carousel: c, companyId, companyPrefix: ctx?.companyPrefix || void 0, onRefresh: refreshGal }, c.issueId)) }) })
+    /* @__PURE__ */ jsx("div", { className: "flex border-b border-border bg-card", children: tabs.map((tab) => /* @__PURE__ */ jsxs(
+      "button",
+      {
+        onClick: () => setActiveTab(tab.key),
+        className: `flex-1 flex items-center justify-center gap-2 py-3 text-sm font-medium border-b-2 transition-colors ${activeTab === tab.key ? tab.activeColor : `${tab.color} border-transparent hover:text-foreground`}`,
+        children: [
+          tab.label,
+          /* @__PURE__ */ jsx("span", { className: `text-[11px] font-bold px-1.5 py-0.5 rounded-full ${activeTab === tab.key ? "bg-current/10" : "bg-muted/50"}`, children: tab.count })
+        ]
+      },
+      tab.key
+    )) }),
+    /* @__PURE__ */ jsx("div", { className: "flex-1 overflow-y-auto", children: /* @__PURE__ */ jsx("div", { className: "max-w-2xl mx-auto p-3 md:p-4 space-y-4", children: galLoading ? /* @__PURE__ */ jsx("div", { className: "text-center text-muted-foreground text-sm p-8", children: "Carregando..." }) : !filtered.length ? /* @__PURE__ */ jsx("div", { className: "text-center text-muted-foreground text-sm p-12", children: emptyMessages[activeTab] }) : filtered.map((c) => /* @__PURE__ */ jsx(CarouselFeedCard, { carousel: c, companyId, companyPrefix: ctx?.companyPrefix || void 0, onRemove: handleRemove }, c.issueId)) }) })
   ] });
 }
 function TimelineSidebar({ context }) {
@@ -571,6 +698,222 @@ function GallerySidebar({ context }) {
       /* @__PURE__ */ jsx("path", { d: "M21 15l-5-5L5 21" })
     ] }) }),
     "Galeria"
+  ] });
+}
+function CalendarSidebar({ context }) {
+  const prefix = context?.companyPrefix || "";
+  const href = prefix ? `/${prefix}/calendario` : "/calendario";
+  const isActive = typeof window !== "undefined" && window.location.pathname.includes("/calendario");
+  return /* @__PURE__ */ jsxs("a", { href, className: `flex items-center gap-2.5 px-3 py-2 text-[13px] font-medium transition-colors ${isActive ? "bg-accent text-foreground" : "text-foreground/80 hover:bg-accent/50 hover:text-foreground"}`, children: [
+    /* @__PURE__ */ jsx("span", { className: "relative shrink-0", children: /* @__PURE__ */ jsxs("svg", { xmlns: "http://www.w3.org/2000/svg", width: "18", height: "18", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", children: [
+      /* @__PURE__ */ jsx("rect", { x: "3", y: "4", width: "18", height: "18", rx: "2", ry: "2" }),
+      /* @__PURE__ */ jsx("line", { x1: "16", y1: "2", x2: "16", y2: "6" }),
+      /* @__PURE__ */ jsx("line", { x1: "8", y1: "2", x2: "8", y2: "6" }),
+      /* @__PURE__ */ jsx("line", { x1: "3", y1: "10", x2: "21", y2: "10" })
+    ] }) }),
+    "Calend\xE1rio"
+  ] });
+}
+function MetricsSidebar({ context }) {
+  const prefix = context?.companyPrefix || "";
+  const href = prefix ? `/${prefix}/metricas` : "/metricas";
+  const isActive = typeof window !== "undefined" && window.location.pathname.includes("/metricas");
+  return /* @__PURE__ */ jsxs("a", { href, className: `flex items-center gap-2.5 px-3 py-2 text-[13px] font-medium transition-colors ${isActive ? "bg-accent text-foreground" : "text-foreground/80 hover:bg-accent/50 hover:text-foreground"}`, children: [
+    /* @__PURE__ */ jsx("span", { className: "relative shrink-0", children: /* @__PURE__ */ jsxs("svg", { xmlns: "http://www.w3.org/2000/svg", width: "18", height: "18", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", children: [
+      /* @__PURE__ */ jsx("path", { d: "M18 20V10" }),
+      /* @__PURE__ */ jsx("path", { d: "M12 20V4" }),
+      /* @__PURE__ */ jsx("path", { d: "M6 20v-6" })
+    ] }) }),
+    "M\xE9tricas"
+  ] });
+}
+var DAYS = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "S\xE1b"];
+function CalendarPage() {
+  const ctx = useHostContext();
+  const companyId = ctx?.companyId;
+  const { data: events, loading } = usePluginData("calendar", { companyId });
+  const [viewWeeks, setViewWeeks] = useState(4);
+  const calendarData = useMemo(() => {
+    if (!events) return [];
+    const today = /* @__PURE__ */ new Date();
+    const startOfWeek = new Date(today);
+    startOfWeek.setDate(today.getDate() - today.getDay());
+    startOfWeek.setHours(0, 0, 0, 0);
+    const days = [];
+    for (let i = 0; i < viewWeeks * 7; i++) {
+      const d = new Date(startOfWeek.getTime() + i * 864e5);
+      const dateStr = d.toISOString().split("T")[0];
+      days.push({
+        date: dateStr,
+        dayNum: d.getDate(),
+        dayName: DAYS[d.getDay()],
+        isToday: dateStr === today.toISOString().split("T")[0],
+        month: d.toLocaleDateString("pt-BR", { month: "short" }),
+        events: events.filter((e) => e.date === dateStr)
+      });
+    }
+    return days;
+  }, [events, viewWeeks]);
+  if (!companyId) return /* @__PURE__ */ jsx("div", { className: "p-8 text-muted-foreground", children: "Selecione uma empresa." });
+  return /* @__PURE__ */ jsxs("div", { className: "flex flex-col h-full text-foreground overflow-hidden", children: [
+    /* @__PURE__ */ jsxs("div", { className: "px-4 py-2 border-b border-border flex items-center gap-2 flex-wrap bg-card/80 backdrop-blur-sm sticky top-0 z-10", children: [
+      /* @__PURE__ */ jsxs("svg", { xmlns: "http://www.w3.org/2000/svg", width: "16", height: "16", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", className: "text-muted-foreground shrink-0", children: [
+        /* @__PURE__ */ jsx("rect", { x: "3", y: "4", width: "18", height: "18", rx: "2" }),
+        /* @__PURE__ */ jsx("line", { x1: "16", y1: "2", x2: "16", y2: "6" }),
+        /* @__PURE__ */ jsx("line", { x1: "8", y1: "2", x2: "8", y2: "6" }),
+        /* @__PURE__ */ jsx("line", { x1: "3", y1: "10", x2: "21", y2: "10" })
+      ] }),
+      /* @__PURE__ */ jsx("span", { className: "text-sm font-semibold mr-2", children: "Calend\xE1rio Editorial" }),
+      /* @__PURE__ */ jsx("div", { className: "h-4 w-px bg-border hidden sm:block" }),
+      /* @__PURE__ */ jsx("div", { className: "flex gap-1", children: [2, 4, 8].map((w) => /* @__PURE__ */ jsxs("button", { onClick: () => setViewWeeks(w), className: `px-2.5 py-1 rounded-md text-xs font-medium border transition-colors ${viewWeeks === w ? "bg-primary/10 text-primary border-primary/50" : "border-input text-muted-foreground hover:bg-accent"}`, children: [
+        w,
+        " sem"
+      ] }, w)) }),
+      /* @__PURE__ */ jsxs("span", { className: "text-[11px] text-muted-foreground ml-auto hidden sm:inline", children: [
+        (events || []).length,
+        " publica\xE7\xF5es planejadas"
+      ] })
+    ] }),
+    /* @__PURE__ */ jsx("div", { className: "flex-1 overflow-y-auto p-3 md:p-4", children: loading ? /* @__PURE__ */ jsx("div", { className: "text-center text-muted-foreground text-sm p-8", children: "Carregando calend\xE1rio..." }) : /* @__PURE__ */ jsxs("div", { className: "grid grid-cols-7 gap-px bg-border rounded-lg overflow-hidden border border-border", children: [
+      DAYS.map((d) => /* @__PURE__ */ jsx("div", { className: "bg-card px-2 py-2 text-center text-[11px] font-semibold text-muted-foreground", children: d }, d)),
+      calendarData.map((day) => /* @__PURE__ */ jsxs("div", { className: `bg-card min-h-[80px] md:min-h-[100px] p-1.5 ${day.isToday ? "ring-2 ring-primary ring-inset" : ""}`, children: [
+        /* @__PURE__ */ jsx("div", { className: `text-[11px] font-medium mb-1 ${day.isToday ? "text-primary font-bold" : "text-muted-foreground"}`, children: day.dayNum === 1 ? `${day.dayNum} ${day.month}` : day.dayNum }),
+        /* @__PURE__ */ jsx("div", { className: "space-y-0.5", children: day.events.map((ev) => /* @__PURE__ */ jsxs(
+          "div",
+          {
+            className: `px-1.5 py-0.5 rounded text-[9px] md:text-[10px] font-medium truncate border-l-2 ${ev.status === "done" ? "bg-green-500/10 text-green-400 border-green-500" : ev.status === "in_progress" || ev.status === "in_review" ? "bg-yellow-500/10 text-yellow-400 border-yellow-500" : "bg-accent/30 text-foreground/80 border-muted-foreground/40"}`,
+            title: `JUS-${ev.issueNumber} ${ev.title} (${ev.channel || ""})`,
+            children: [
+              /* @__PURE__ */ jsxs("span", { className: "font-bold", children: [
+                "JUS-",
+                ev.issueNumber
+              ] }),
+              " ",
+              /* @__PURE__ */ jsx("span", { className: "hidden md:inline", children: ev.title.replace(/^\[[^\]]+\]\s*/, "").substring(0, 25) })
+            ]
+          },
+          ev.id
+        )) })
+      ] }, day.date))
+    ] }) })
+  ] });
+}
+function StatCard({ label, value, sub, color }) {
+  return /* @__PURE__ */ jsxs("div", { className: "rounded-lg border border-border bg-card p-4 shadow-sm", children: [
+    /* @__PURE__ */ jsx("div", { className: `text-2xl font-bold ${color || ""}`, children: value }),
+    /* @__PURE__ */ jsx("div", { className: "text-xs text-muted-foreground mt-0.5", children: label }),
+    sub && /* @__PURE__ */ jsx("div", { className: "text-[10px] text-muted-foreground/60 mt-0.5", children: sub })
+  ] });
+}
+function BarChart({ data, maxVal }) {
+  const max = maxVal || Math.max(...data.map((d) => d.value), 1);
+  return /* @__PURE__ */ jsx("div", { className: "space-y-2", children: data.map((d, i) => /* @__PURE__ */ jsxs("div", { className: "flex items-center gap-2", children: [
+    /* @__PURE__ */ jsx("span", { className: "text-[11px] text-muted-foreground w-16 text-right shrink-0", children: d.label }),
+    /* @__PURE__ */ jsx("div", { className: "flex-1 h-5 bg-accent/20 rounded overflow-hidden", children: /* @__PURE__ */ jsx("div", { className: "h-full rounded transition-all", style: { width: `${d.value / max * 100}%`, background: d.color || "hsl(var(--primary))" } }) }),
+    /* @__PURE__ */ jsx("span", { className: "text-[11px] font-semibold w-8", children: d.value })
+  ] }, i)) });
+}
+function MetricsPage() {
+  const ctx = useHostContext();
+  const companyId = ctx?.companyId;
+  const { data: metrics, loading, refresh } = usePluginData("metrics", { companyId });
+  if (!companyId) return /* @__PURE__ */ jsx("div", { className: "p-8 text-muted-foreground", children: "Selecione uma empresa." });
+  return /* @__PURE__ */ jsxs("div", { className: "flex flex-col h-full text-foreground overflow-hidden", children: [
+    /* @__PURE__ */ jsxs("div", { className: "px-4 py-2 border-b border-border flex items-center gap-2 flex-wrap bg-card/80 backdrop-blur-sm sticky top-0 z-10", children: [
+      /* @__PURE__ */ jsxs("svg", { xmlns: "http://www.w3.org/2000/svg", width: "16", height: "16", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", className: "text-muted-foreground shrink-0", children: [
+        /* @__PURE__ */ jsx("path", { d: "M18 20V10" }),
+        /* @__PURE__ */ jsx("path", { d: "M12 20V4" }),
+        /* @__PURE__ */ jsx("path", { d: "M6 20v-6" })
+      ] }),
+      /* @__PURE__ */ jsx("span", { className: "text-sm font-semibold mr-2", children: "M\xE9tricas de Produtividade" }),
+      /* @__PURE__ */ jsx("button", { onClick: () => refresh(), className: "ml-auto p-1.5 rounded-md border border-input text-muted-foreground hover:bg-accent transition-colors", title: "Atualizar", children: /* @__PURE__ */ jsxs("svg", { xmlns: "http://www.w3.org/2000/svg", width: "14", height: "14", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", children: [
+        /* @__PURE__ */ jsx("path", { d: "M21 12a9 9 0 11-6.219-8.56" }),
+        /* @__PURE__ */ jsx("polyline", { points: "21 3 21 9 15 9" })
+      ] }) })
+    ] }),
+    /* @__PURE__ */ jsx("div", { className: "flex-1 overflow-y-auto p-4 md:p-6", children: loading || !metrics ? /* @__PURE__ */ jsx("div", { className: "text-center text-muted-foreground text-sm p-8", children: "Carregando m\xE9tricas..." }) : /* @__PURE__ */ jsxs("div", { className: "max-w-4xl mx-auto space-y-6", children: [
+      /* @__PURE__ */ jsxs("div", { className: "grid grid-cols-2 md:grid-cols-4 gap-3", children: [
+        /* @__PURE__ */ jsx(StatCard, { label: "Total de pe\xE7as", value: metrics.total }),
+        /* @__PURE__ */ jsx(StatCard, { label: "Conclu\xEDdas", value: metrics.done, color: "text-green-500", sub: `${metrics.total > 0 ? Math.round(metrics.done / metrics.total * 100) : 0}% do total` }),
+        /* @__PURE__ */ jsx(StatCard, { label: "Esta semana", value: `${metrics.thisWeekDone}/${metrics.weeklyTarget}`, color: metrics.thisWeekDone >= metrics.weeklyTarget ? "text-green-500" : "text-yellow-500", sub: "Meta semanal: 3" }),
+        /* @__PURE__ */ jsx(StatCard, { label: "Taxa de aprova\xE7\xE3o", value: `${metrics.approvalRate}%`, color: metrics.approvalRate >= 80 ? "text-green-500" : "text-yellow-500", sub: "Na primeira revis\xE3o" })
+      ] }),
+      /* @__PURE__ */ jsxs("div", { className: "grid md:grid-cols-2 gap-4", children: [
+        /* @__PURE__ */ jsxs("div", { className: "rounded-lg border border-border bg-card p-4 shadow-sm", children: [
+          /* @__PURE__ */ jsx("div", { className: "text-sm font-semibold mb-3", children: "Produ\xE7\xE3o semanal" }),
+          /* @__PURE__ */ jsx(BarChart, { data: (metrics.weeklyProduction || []).map((w) => ({ label: w.week, value: w.count, color: w.count >= 3 ? "#10b981" : "#f59e0b" })), maxVal: 5 })
+        ] }),
+        /* @__PURE__ */ jsxs("div", { className: "rounded-lg border border-border bg-card p-4 shadow-sm", children: [
+          /* @__PURE__ */ jsx("div", { className: "text-sm font-semibold mb-3", children: "Por editoria" }),
+          /* @__PURE__ */ jsx(BarChart, { data: Object.entries(metrics.byEditoria || {}).filter(([, v]) => v.total > 0).map(([tag, v]) => ({
+            label: tag.substring(0, 12),
+            value: v.total,
+            color: TC[tag] || "hsl(var(--primary))"
+          })) })
+        ] }),
+        /* @__PURE__ */ jsxs("div", { className: "rounded-lg border border-border bg-card p-4 shadow-sm", children: [
+          /* @__PURE__ */ jsx("div", { className: "text-sm font-semibold mb-3", children: "Desempenho por agente" }),
+          /* @__PURE__ */ jsx("div", { className: "space-y-3", children: (metrics.byAgent || []).map((a) => /* @__PURE__ */ jsxs("div", { className: "flex items-center gap-3", children: [
+            /* @__PURE__ */ jsx(Avatar, { name: a.name, role: a.role, size: "w-7 h-7 text-[10px]" }),
+            /* @__PURE__ */ jsxs("div", { className: "flex-1 min-w-0", children: [
+              /* @__PURE__ */ jsx("div", { className: "text-xs font-semibold truncate", style: { color: rc(a.role) }, children: a.name }),
+              /* @__PURE__ */ jsxs("div", { className: "flex gap-3 text-[10px] text-muted-foreground", children: [
+                /* @__PURE__ */ jsxs("span", { children: [
+                  a.assigned,
+                  " atribu\xEDdas"
+                ] }),
+                /* @__PURE__ */ jsxs("span", { className: "text-green-500", children: [
+                  a.done,
+                  " conclu\xEDdas"
+                ] }),
+                /* @__PURE__ */ jsxs("span", { className: "text-yellow-500", children: [
+                  a.inProgress,
+                  " em progresso"
+                ] })
+              ] })
+            ] }),
+            /* @__PURE__ */ jsxs("div", { className: "text-right", children: [
+              /* @__PURE__ */ jsxs("div", { className: "text-sm font-bold", style: { color: rc(a.role) }, children: [
+                a.assigned > 0 ? Math.round(a.done / a.assigned * 100) : 0,
+                "%"
+              ] }),
+              /* @__PURE__ */ jsx("div", { className: "text-[9px] text-muted-foreground", children: "conclus\xE3o" })
+            ] })
+          ] }, a.id)) })
+        ] }),
+        /* @__PURE__ */ jsxs("div", { className: "rounded-lg border border-border bg-card p-4 shadow-sm", children: [
+          /* @__PURE__ */ jsx("div", { className: "text-sm font-semibold mb-3", children: "Pipeline atual" }),
+          /* @__PURE__ */ jsxs("div", { className: "grid grid-cols-2 gap-2", children: [
+            /* @__PURE__ */ jsxs("div", { className: "p-2 rounded bg-accent/20", children: [
+              /* @__PURE__ */ jsx("div", { className: "text-lg font-bold text-muted-foreground", children: metrics.backlog }),
+              /* @__PURE__ */ jsx("div", { className: "text-[10px] text-muted-foreground", children: "Backlog" })
+            ] }),
+            /* @__PURE__ */ jsxs("div", { className: "p-2 rounded bg-yellow-500/10", children: [
+              /* @__PURE__ */ jsx("div", { className: "text-lg font-bold text-yellow-500", children: metrics.inProgress }),
+              /* @__PURE__ */ jsx("div", { className: "text-[10px] text-muted-foreground", children: "Em produ\xE7\xE3o" })
+            ] }),
+            /* @__PURE__ */ jsxs("div", { className: "p-2 rounded bg-purple-500/10", children: [
+              /* @__PURE__ */ jsx("div", { className: "text-lg font-bold text-purple-500", children: metrics.inReview }),
+              /* @__PURE__ */ jsx("div", { className: "text-[10px] text-muted-foreground", children: "Em revis\xE3o" })
+            ] }),
+            /* @__PURE__ */ jsxs("div", { className: "p-2 rounded bg-green-500/10", children: [
+              /* @__PURE__ */ jsx("div", { className: "text-lg font-bold text-green-500", children: metrics.done }),
+              /* @__PURE__ */ jsx("div", { className: "text-[10px] text-muted-foreground", children: "Conclu\xEDdas" })
+            ] })
+          ] }),
+          metrics.topReasons?.length > 0 && /* @__PURE__ */ jsxs("div", { className: "mt-4", children: [
+            /* @__PURE__ */ jsx("div", { className: "text-xs font-medium text-muted-foreground mb-2", children: "Motivos de reprova\xE7\xE3o mais comuns" }),
+            metrics.topReasons.map((r, i) => /* @__PURE__ */ jsxs("div", { className: "flex items-center justify-between text-[11px] py-1 border-b border-border/50 last:border-0", children: [
+              /* @__PURE__ */ jsx("span", { className: "text-muted-foreground", children: r.reason }),
+              /* @__PURE__ */ jsxs("span", { className: "font-semibold text-red-400", children: [
+                r.count,
+                "x"
+              ] })
+            ] }, i))
+          ] })
+        ] })
+      ] })
+    ] }) })
   ] });
 }
 function CreativeHubDashboardWidget() {
@@ -609,9 +952,13 @@ function CreativeHubDashboardWidget() {
   ] });
 }
 export {
+  CalendarPage,
+  CalendarSidebar,
   CreativeHubDashboardWidget,
   GalleryPage,
   GallerySidebar,
+  MetricsPage,
+  MetricsSidebar,
   TimelinePage,
   TimelineSidebar
 };

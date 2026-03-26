@@ -175,6 +175,37 @@ function LazyImage({ attachmentId, alt, className }: { attachmentId: string; alt
 // PAGE 1: TIMELINE
 // ════════════════════════════════════════════════════════════
 
+// ─── Briefing Modal ───
+function BriefingModal({ onClose, onSubmit }: { onClose: () => void; onSubmit: (data: any) => void }) {
+  const [form, setForm] = useState({ editoria: "Seus Direitos", formato: "Carrossel Instagram", canal: "Instagram", publico: "Cidadão (Ana)", data: "", tema: "", descricao: "" });
+  const set = (k: string, v: string) => setForm(f => ({ ...f, [k]: v }));
+  const editorias = ["Seus Direitos", "Consulta Processual", "Jus IA", "Employer Branding", "Institucional"];
+  const formatos = ["Carrossel Instagram", "Carrossel LinkedIn", "Ads Meta (feed)", "Ads Meta (stories)", "Email marketing", "Card único"];
+  const canais = ["Instagram", "LinkedIn", "Instagram + LinkedIn", "Meta Ads", "Email"];
+  const publicos = ["Cidadão (Ana)", "Advogado (Pedro)", "Estudante (Mariana)", "Candidato tech"];
+  return (
+    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4" onClick={onClose}>
+      <div className="bg-card border border-border rounded-xl shadow-xl max-w-lg w-full p-5 space-y-3 max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+        <h3 className="text-base font-bold">Novo briefing</h3>
+        <p className="text-xs text-muted-foreground">Preencha os detalhes e o Orchestrator iniciará a produção automaticamente.</p>
+        <div className="grid grid-cols-2 gap-3">
+          <div><label className="text-[11px] font-medium text-muted-foreground">Editoria</label><select value={form.editoria} onChange={e => set("editoria", e.target.value)} className="w-full mt-1 h-9 rounded-md border border-input bg-background px-2 text-sm">{editorias.map(e => <option key={e}>{e}</option>)}</select></div>
+          <div><label className="text-[11px] font-medium text-muted-foreground">Formato</label><select value={form.formato} onChange={e => set("formato", e.target.value)} className="w-full mt-1 h-9 rounded-md border border-input bg-background px-2 text-sm">{formatos.map(f => <option key={f}>{f}</option>)}</select></div>
+          <div><label className="text-[11px] font-medium text-muted-foreground">Canal</label><select value={form.canal} onChange={e => set("canal", e.target.value)} className="w-full mt-1 h-9 rounded-md border border-input bg-background px-2 text-sm">{canais.map(c => <option key={c}>{c}</option>)}</select></div>
+          <div><label className="text-[11px] font-medium text-muted-foreground">Público</label><select value={form.publico} onChange={e => set("publico", e.target.value)} className="w-full mt-1 h-9 rounded-md border border-input bg-background px-2 text-sm">{publicos.map(p => <option key={p}>{p}</option>)}</select></div>
+          <div className="col-span-2"><label className="text-[11px] font-medium text-muted-foreground">Data de publicação</label><input type="date" value={form.data} onChange={e => set("data", e.target.value)} className="w-full mt-1 h-9 rounded-md border border-input bg-background px-2 text-sm" /></div>
+        </div>
+        <div><label className="text-[11px] font-medium text-muted-foreground">Tema / Título</label><input value={form.tema} onChange={e => set("tema", e.target.value)} placeholder="Ex: Direito de arrependimento em compras online" className="w-full mt-1 h-9 rounded-md border border-input bg-background px-3 text-sm" /></div>
+        <div><label className="text-[11px] font-medium text-muted-foreground">Descrição / Direcionamento</label><textarea value={form.descricao} onChange={e => set("descricao", e.target.value)} placeholder="Descreva o que espera da peça, referências, tom desejado..." rows={3} className="w-full mt-1 rounded-md border border-input bg-background px-3 py-2 text-sm resize-y" /></div>
+        <div className="flex gap-2 justify-end pt-2">
+          <button onClick={onClose} className="px-4 py-2 rounded-md text-sm border border-input text-muted-foreground hover:bg-accent">Cancelar</button>
+          <button onClick={() => { if (form.tema.trim()) onSubmit(form); }} disabled={!form.tema.trim()} className="px-4 py-2 rounded-md text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50">Criar briefing</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function TimelinePage() {
   const ctx = useHostContext();
   const companyId = ctx?.companyId;
@@ -183,6 +214,7 @@ export function TimelinePage() {
   const [filterType, setFilterType] = useState("all");
   const [filterTag, setFilterTag] = useState("all");
   const [threadIssueId, setThreadIssueId] = useState<string | null>(null);
+  const [showBriefing, setShowBriefing] = useState(false);
 
   const { data: agents } = usePluginData<any[]>("agents", { companyId });
   const { data: timeline, loading: tlLoading, refresh: refreshTl } = usePluginData<any[]>("timeline", { companyId, filterAgent, filterType, filterTag, limit: 150 });
@@ -190,6 +222,18 @@ export function TimelinePage() {
 
   const sendMessage = usePluginAction("send-message");
   const sendBroadcast = usePluginAction("send-broadcast");
+  const createBriefing = usePluginAction("create-briefing");
+
+  const handleBriefing = useCallback(async (data: any) => {
+    if (!companyId) return;
+    try {
+      await createBriefing({ companyId, ...data });
+      toast?.({ title: `Briefing criado: ${data.tema}`, tone: "success" });
+      setShowBriefing(false);
+      refreshTl();
+    } catch (e: any) { toast?.({ title: "Erro ao criar briefing", body: e.message, tone: "error" }); }
+  }, [companyId, createBriefing, toast, refreshTl]);
+
   const handleSend = useCallback(async (body: string, issueId?: string) => {
     if (!companyId) return;
     try {
@@ -240,10 +284,17 @@ export function TimelinePage() {
         <DropdownFilter label="Tipo" value={filterType} options={typeOptions} onChange={setFilterType} />
         {tags.length > 0 && <DropdownFilter label="Editoria" value={filterTag} options={tagOptions} onChange={setFilterTag} />}
         <span className="text-[11px] text-muted-foreground ml-auto hidden sm:inline">{timeline?.length || 0} mensagens</span>
+        <button onClick={() => setShowBriefing(true)} className="inline-flex items-center gap-1.5 rounded-md text-xs font-medium h-8 px-3 bg-primary text-primary-foreground hover:bg-primary/90 transition-colors">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 5v14M5 12h14"/></svg>
+          Novo briefing
+        </button>
         <button onClick={() => refreshTl()} className="p-1.5 rounded-md border border-input text-muted-foreground hover:bg-accent transition-colors" title="Atualizar">
           <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12a9 9 0 11-6.219-8.56" /><polyline points="21 3 21 9 15 9" /></svg>
         </button>
       </div>
+
+      {/* Briefing modal */}
+      {showBriefing && <BriefingModal onClose={() => setShowBriefing(false)} onSubmit={handleBriefing} />}
 
       {/* Two-panel: messages + optional thread */}
       <div className="flex-1 flex overflow-hidden">
@@ -292,21 +343,28 @@ const REJECTION_REASONS = [
   { key: "wrong_format", label: "Formato ou dimensão incorreta" },
 ];
 
-function RejectModal({ onClose, onSubmit }: { onClose: () => void; onSubmit: (reasons: string[], note: string) => void }) {
+function RejectModal({ onClose, onSubmit, onDiscard }: { onClose: () => void; onSubmit: (reasons: string[], note: string) => void; onDiscard: () => void }) {
   const [selected, setSelected] = useState<string[]>([]);
   const [note, setNote] = useState("");
+  const [discard, setDiscard] = useState(false);
   const toggle = (key: string) => setSelected(s => s.includes(key) ? s.filter(k => k !== key) : [...s, key]);
+
+  const handleSubmit = () => {
+    if (discard) { onDiscard(); return; }
+    if (selected.length || note.trim()) onSubmit(selected, note);
+  };
+
   return (
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4" onClick={onClose}>
       <div className="bg-card border border-border rounded-xl shadow-xl max-w-md w-full p-5 space-y-4" onClick={e => e.stopPropagation()}>
         <div>
           <h3 className="text-base font-bold">Reprovar carrossel</h3>
-          <p className="text-xs text-muted-foreground mt-1">Selecione os motivos e descreva o que o agente deve corrigir na próxima versão.</p>
+          <p className="text-xs text-muted-foreground mt-1">Selecione os motivos e descreva o que o agente deve corrigir.</p>
         </div>
         <div className="space-y-1.5">
           {REJECTION_REASONS.map(r => (
-            <button key={r.key} onClick={() => toggle(r.key)}
-              className={`flex items-center gap-2 w-full px-3 py-2 rounded-md text-sm text-left transition-colors border ${selected.includes(r.key) ? "border-red-500/50 bg-red-500/10 text-foreground font-medium" : "border-border hover:bg-accent/50 text-muted-foreground"}`}>
+            <button key={r.key} onClick={() => { if (!discard) toggle(r.key); }}
+              className={`flex items-center gap-2 w-full px-3 py-2 rounded-md text-sm text-left transition-colors border ${discard ? "opacity-40 pointer-events-none border-border" : selected.includes(r.key) ? "border-red-500/50 bg-red-500/10 text-foreground font-medium" : "border-border hover:bg-accent/50 text-muted-foreground"}`}>
               <span className={`w-4 h-4 rounded border-2 flex items-center justify-center text-[10px] shrink-0 ${selected.includes(r.key) ? "border-red-500 bg-red-500 text-white" : "border-muted-foreground/40"}`}>
                 {selected.includes(r.key) && "x"}
               </span>
@@ -314,14 +372,24 @@ function RejectModal({ onClose, onSubmit }: { onClose: () => void; onSubmit: (re
             </button>
           ))}
         </div>
-        <textarea value={note} onChange={e => setNote(e.target.value)} placeholder="Direcionamento para o agente criar nova versão..." rows={3}
-          className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm resize-y focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] outline-none" />
+        <textarea value={note} onChange={e => setNote(e.target.value)} placeholder={discard ? "Motivo do descarte (opcional)..." : "Direcionamento para o agente criar nova versão..."} rows={2}
+          disabled={discard}
+          className={`w-full rounded-md border border-input bg-background px-3 py-2 text-sm resize-y focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] outline-none ${discard ? "opacity-40" : ""}`} />
+        {/* Discard checkbox */}
+        <button onClick={() => setDiscard(!discard)}
+          className={`flex items-center gap-2 w-full px-3 py-2.5 rounded-md text-sm text-left transition-colors border ${discard ? "border-red-800 bg-red-950 text-red-400 font-medium" : "border-border hover:bg-red-950/30 text-muted-foreground"}`}>
+          <span className={`w-4 h-4 rounded border-2 flex items-center justify-center text-[10px] shrink-0 ${discard ? "border-red-600 bg-red-600 text-white" : "border-muted-foreground/40"}`}>
+            {discard && "x"}
+          </span>
+          Descartar definitivamente — arquivar sem enviar feedback
+        </button>
+        {discard && <p className="text-[11px] text-red-400/80">A issue será cancelada e arquivada. O agente não será notificado.</p>}
         <div className="flex gap-2 justify-end">
           <button onClick={onClose} className="px-4 py-2 rounded-md text-sm border border-input text-muted-foreground hover:bg-accent">Cancelar</button>
-          <button onClick={() => { if (selected.length || note.trim()) onSubmit(selected, note); }}
-            disabled={!selected.length && !note.trim()}
-            className="px-4 py-2 rounded-md text-sm font-medium bg-red-500 text-white hover:bg-red-600 disabled:opacity-50">
-            Reprovar e enviar feedback
+          <button onClick={handleSubmit}
+            disabled={!discard && !selected.length && !note.trim()}
+            className={`px-4 py-2 rounded-md text-sm font-medium disabled:opacity-50 ${discard ? "bg-red-900 text-red-300 hover:bg-red-800" : "bg-red-500 text-white hover:bg-red-600"}`}>
+            {discard ? "Descartar e arquivar" : "Reprovar e enviar feedback"}
           </button>
         </div>
       </div>
@@ -384,11 +452,12 @@ function CarouselSlider({ images }: { images: Array<{ id: string; filename: stri
 }
 
 // Feed card for a carousel (grouped by issue)
-function CarouselFeedCard({ carousel, companyId, companyPrefix, onRefresh }: { carousel: any; companyId: string; companyPrefix?: string; onRefresh: () => void }) {
+function CarouselFeedCard({ carousel, companyId, companyPrefix, onRemove }: { carousel: any; companyId: string; companyPrefix?: string; onRemove: (issueId: string) => void }) {
   const [showReject, setShowReject] = useState(false);
   const [acting, setActing] = useState(false);
   const approveAction = usePluginAction("approve-piece");
   const rejectAction = usePluginAction("reject-piece");
+  const discardAction = usePluginAction("discard-piece");
   const toast = usePluginToast();
 
   const handleApprove = useCallback(async () => {
@@ -396,10 +465,10 @@ function CarouselFeedCard({ carousel, companyId, companyPrefix, onRefresh }: { c
     try {
       await approveAction({ issueId: carousel.issueId, companyId, note: "Carrossel aprovado para publicação." });
       toast?.({ title: "Carrossel aprovado", tone: "success" });
-      onRefresh();
+      onRemove(carousel.issueId);
     } catch (e: any) { toast?.({ title: "Erro", body: e.message, tone: "error" }); }
     setActing(false);
-  }, [approveAction, carousel, companyId, toast, onRefresh]);
+  }, [approveAction, carousel, companyId, toast, onRemove]);
 
   const handleReject = useCallback(async (reasons: string[], note: string) => {
     setActing(true);
@@ -408,10 +477,21 @@ function CarouselFeedCard({ carousel, companyId, companyPrefix, onRefresh }: { c
       await rejectAction({ issueId: carousel.issueId, companyId, reasons: reasonLabels, note });
       toast?.({ title: "Feedback enviado ao agente", tone: "success" });
       setShowReject(false);
-      onRefresh();
+      onRemove(carousel.issueId);
     } catch (e: any) { toast?.({ title: "Erro", body: e.message, tone: "error" }); }
     setActing(false);
-  }, [rejectAction, carousel, companyId, toast, onRefresh]);
+  }, [rejectAction, carousel, companyId, toast, onRemove]);
+
+  const handleDiscard = useCallback(async () => {
+    setActing(true);
+    try {
+      await discardAction({ issueId: carousel.issueId, companyId });
+      toast?.({ title: "Peça descartada e arquivada", tone: "success" });
+      setShowReject(false);
+      onRemove(carousel.issueId);
+    } catch (e: any) { toast?.({ title: "Erro", body: e.message, tone: "error" }); }
+    setActing(false);
+  }, [discardAction, carousel, companyId, toast, onRemove]);
 
   const statusBadge = carousel.reviewStatus === "approved"
     ? "text-green-500 bg-green-500/10 border-green-500/30"
@@ -492,7 +572,7 @@ function CarouselFeedCard({ carousel, companyId, companyPrefix, onRefresh }: { c
         </div>
       </div>
 
-      {showReject && <RejectModal onClose={() => setShowReject(false)} onSubmit={handleReject} />}
+      {showReject && <RejectModal onClose={() => setShowReject(false)} onSubmit={handleReject} onDiscard={handleDiscard} />}
     </>
   );
 }
@@ -501,31 +581,57 @@ export function GalleryPage() {
   const ctx = useHostContext();
   const companyId = ctx?.companyId;
   const { data: carousels, loading: galLoading, refresh: refreshGal } = usePluginData<any[]>("gallery", { companyId });
+  const [removedIds, setRemovedIds] = useState<Set<string>>(new Set());
   const [galFilter, setGalFilter] = useState("all");
-  const [statusFilter, setStatusFilter] = useState("all");
+  const [activeTab, setActiveTab] = useState<"pending" | "rejected" | "approved">("pending");
+
+  const handleRemove = useCallback((issueId: string) => {
+    setRemovedIds(prev => new Set(prev).add(issueId));
+  }, []);
+
+  const handleStatusChange = useCallback((issueId: string, newStatus: string) => {
+    // Remove from current view immediately
+    setRemovedIds(prev => new Set(prev).add(issueId));
+  }, []);
 
   const galTags = useMemo(() => Array.from(new Set((carousels || []).map((c: any) => c.tag).filter(Boolean))), [carousels]);
+
+  const counts = useMemo(() => {
+    const all = (carousels || []).filter((c: any) => !removedIds.has(c.issueId) && (galFilter === "all" || c.tag === galFilter));
+    return {
+      pending: all.filter(c => c.reviewStatus !== "approved" && c.reviewStatus !== "rejected" && c.reviewStatus !== "discarded").length,
+      rejected: all.filter(c => c.reviewStatus === "rejected").length,
+      approved: all.filter(c => c.reviewStatus === "approved").length,
+    };
+  }, [carousels, galFilter]);
+
   const filtered = useMemo(() => {
     return (carousels || []).filter((c: any) => {
+      if (removedIds.has(c.issueId)) return false;
       if (galFilter !== "all" && c.tag !== galFilter) return false;
-      if (statusFilter === "pending" && c.reviewStatus !== "pending") return false;
-      if (statusFilter === "approved" && c.reviewStatus !== "approved") return false;
-      if (statusFilter === "rejected" && c.reviewStatus !== "rejected") return false;
+      if (activeTab === "pending") return c.reviewStatus !== "approved" && c.reviewStatus !== "rejected" && c.reviewStatus !== "discarded";
+      if (activeTab === "approved") return c.reviewStatus === "approved";
+      if (activeTab === "rejected") return c.reviewStatus === "rejected";
       return true;
     });
-  }, [carousels, galFilter, statusFilter]);
+  }, [carousels, galFilter, activeTab, removedIds]);
 
   const tagOptions = useMemo(() => [
     { key: "all", label: "Todas" },
     ...galTags.map(t => ({ key: t, label: t, color: tc(t) })),
   ], [galTags]);
 
-  const statusOptions = [
-    { key: "all", label: "Todos" },
-    { key: "pending", label: "Aguardando" },
-    { key: "approved", label: "Aprovados" },
-    { key: "rejected", label: "Reprovados" },
+  const tabs: Array<{ key: "pending" | "rejected" | "approved"; label: string; count: number; color: string; activeColor: string }> = [
+    { key: "pending", label: "Aguardando", count: counts.pending, color: "text-muted-foreground", activeColor: "text-yellow-500 border-yellow-500" },
+    { key: "rejected", label: "Reprovados", count: counts.rejected, color: "text-muted-foreground", activeColor: "text-red-500 border-red-500" },
+    { key: "approved", label: "Aprovadas", count: counts.approved, color: "text-muted-foreground", activeColor: "text-green-500 border-green-500" },
   ];
+
+  const emptyMessages = {
+    pending: "Nenhuma peça aguardando revisão.",
+    rejected: "Nenhuma peça reprovada no momento.",
+    approved: "Nenhuma peça aprovada ainda.",
+  };
 
   if (!companyId) return <div className="p-8 text-muted-foreground">Selecione uma empresa.</div>;
 
@@ -537,19 +643,33 @@ export function GalleryPage() {
         <span className="text-sm font-semibold mr-2">Galeria</span>
         <div className="h-4 w-px bg-border hidden sm:block" />
         <DropdownFilter label="Editoria" value={galFilter} options={tagOptions} onChange={setGalFilter} />
-        <DropdownFilter label="Status" value={statusFilter} options={statusOptions} onChange={setStatusFilter} />
-        <span className="text-[11px] text-muted-foreground ml-auto hidden sm:inline">{filtered.length} carrosséis</span>
-        <button onClick={() => refreshGal()} className="p-1.5 rounded-md border border-input text-muted-foreground hover:bg-accent transition-colors" title="Atualizar">
+        <button onClick={() => refreshGal()} className="ml-auto p-1.5 rounded-md border border-input text-muted-foreground hover:bg-accent transition-colors" title="Atualizar">
           <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12a9 9 0 11-6.219-8.56" /><polyline points="21 3 21 9 15 9" /></svg>
         </button>
+      </div>
+
+      {/* Tabs */}
+      <div className="flex border-b border-border bg-card">
+        {tabs.map(tab => (
+          <button
+            key={tab.key}
+            onClick={() => setActiveTab(tab.key)}
+            className={`flex-1 flex items-center justify-center gap-2 py-3 text-sm font-medium border-b-2 transition-colors ${activeTab === tab.key ? tab.activeColor : `${tab.color} border-transparent hover:text-foreground`}`}
+          >
+            {tab.label}
+            <span className={`text-[11px] font-bold px-1.5 py-0.5 rounded-full ${activeTab === tab.key ? "bg-current/10" : "bg-muted/50"}`}>
+              {tab.count}
+            </span>
+          </button>
+        ))}
       </div>
 
       {/* Feed */}
       <div className="flex-1 overflow-y-auto">
         <div className="max-w-2xl mx-auto p-3 md:p-4 space-y-4">
-          {galLoading ? <div className="text-center text-muted-foreground text-sm p-8">Carregando carrosséis...</div>
-          : !filtered.length ? <div className="text-center text-muted-foreground text-sm p-12">Nenhum carrossel para revisão.</div>
-          : filtered.map((c: any) => <CarouselFeedCard key={c.issueId} carousel={c} companyId={companyId!} companyPrefix={ctx?.companyPrefix || undefined} onRefresh={refreshGal} />)}
+          {galLoading ? <div className="text-center text-muted-foreground text-sm p-8">Carregando...</div>
+          : !filtered.length ? <div className="text-center text-muted-foreground text-sm p-12">{emptyMessages[activeTab]}</div>
+          : filtered.map((c: any) => <CarouselFeedCard key={c.issueId} carousel={c} companyId={companyId!} companyPrefix={ctx?.companyPrefix || undefined} onRemove={handleRemove} />)}
         </div>
       </div>
     </div>
@@ -581,6 +701,240 @@ export function GallerySidebar({ context }: { context?: any }) {
       <span className="relative shrink-0"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" /><path d="M21 15l-5-5L5 21" /></svg></span>
       Galeria
     </a>
+  );
+}
+
+export function CalendarSidebar({ context }: { context?: any }) {
+  const prefix = context?.companyPrefix || "";
+  const href = prefix ? `/${prefix}/calendario` : "/calendario";
+  const isActive = typeof window !== "undefined" && window.location.pathname.includes("/calendario");
+  return (
+    <a href={href} className={`flex items-center gap-2.5 px-3 py-2 text-[13px] font-medium transition-colors ${isActive ? "bg-accent text-foreground" : "text-foreground/80 hover:bg-accent/50 hover:text-foreground"}`}>
+      <span className="relative shrink-0"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span>
+      Calendário
+    </a>
+  );
+}
+
+export function MetricsSidebar({ context }: { context?: any }) {
+  const prefix = context?.companyPrefix || "";
+  const href = prefix ? `/${prefix}/metricas` : "/metricas";
+  const isActive = typeof window !== "undefined" && window.location.pathname.includes("/metricas");
+  return (
+    <a href={href} className={`flex items-center gap-2.5 px-3 py-2 text-[13px] font-medium transition-colors ${isActive ? "bg-accent text-foreground" : "text-foreground/80 hover:bg-accent/50 hover:text-foreground"}`}>
+      <span className="relative shrink-0"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg></span>
+      Métricas
+    </a>
+  );
+}
+
+// ════════════════════════════════════════════════════════════
+// PAGE 3: CALENDÁRIO EDITORIAL
+// ════════════════════════════════════════════════════════════
+
+const DAYS = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
+
+export function CalendarPage() {
+  const ctx = useHostContext();
+  const companyId = ctx?.companyId;
+  const { data: events, loading } = usePluginData<any[]>("calendar", { companyId });
+  const [viewWeeks, setViewWeeks] = useState(4);
+
+  const calendarData = useMemo(() => {
+    if (!events) return [];
+    const today = new Date();
+    const startOfWeek = new Date(today);
+    startOfWeek.setDate(today.getDate() - today.getDay());
+    startOfWeek.setHours(0, 0, 0, 0);
+
+    const days: Array<{ date: string; dayNum: number; dayName: string; isToday: boolean; month: string; events: any[] }> = [];
+
+    for (let i = 0; i < viewWeeks * 7; i++) {
+      const d = new Date(startOfWeek.getTime() + i * 86400000);
+      const dateStr = d.toISOString().split("T")[0];
+      days.push({
+        date: dateStr,
+        dayNum: d.getDate(),
+        dayName: DAYS[d.getDay()],
+        isToday: dateStr === today.toISOString().split("T")[0],
+        month: d.toLocaleDateString("pt-BR", { month: "short" }),
+        events: events.filter(e => e.date === dateStr),
+      });
+    }
+    return days;
+  }, [events, viewWeeks]);
+
+  if (!companyId) return <div className="p-8 text-muted-foreground">Selecione uma empresa.</div>;
+
+  return (
+    <div className="flex flex-col h-full text-foreground overflow-hidden">
+      <div className="px-4 py-2 border-b border-border flex items-center gap-2 flex-wrap bg-card/80 backdrop-blur-sm sticky top-0 z-10">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-muted-foreground shrink-0"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        <span className="text-sm font-semibold mr-2">Calendário Editorial</span>
+        <div className="h-4 w-px bg-border hidden sm:block" />
+        <div className="flex gap-1">
+          {[2, 4, 8].map(w => (
+            <button key={w} onClick={() => setViewWeeks(w)} className={`px-2.5 py-1 rounded-md text-xs font-medium border transition-colors ${viewWeeks === w ? "bg-primary/10 text-primary border-primary/50" : "border-input text-muted-foreground hover:bg-accent"}`}>
+              {w} sem
+            </button>
+          ))}
+        </div>
+        <span className="text-[11px] text-muted-foreground ml-auto hidden sm:inline">{(events || []).length} publicações planejadas</span>
+      </div>
+
+      <div className="flex-1 overflow-y-auto p-3 md:p-4">
+        {loading ? <div className="text-center text-muted-foreground text-sm p-8">Carregando calendário...</div> : (
+          <div className="grid grid-cols-7 gap-px bg-border rounded-lg overflow-hidden border border-border">
+            {/* Header */}
+            {DAYS.map(d => <div key={d} className="bg-card px-2 py-2 text-center text-[11px] font-semibold text-muted-foreground">{d}</div>)}
+            {/* Days */}
+            {calendarData.map(day => (
+              <div key={day.date} className={`bg-card min-h-[80px] md:min-h-[100px] p-1.5 ${day.isToday ? "ring-2 ring-primary ring-inset" : ""}`}>
+                <div className={`text-[11px] font-medium mb-1 ${day.isToday ? "text-primary font-bold" : "text-muted-foreground"}`}>
+                  {day.dayNum === 1 ? `${day.dayNum} ${day.month}` : day.dayNum}
+                </div>
+                <div className="space-y-0.5">
+                  {day.events.map((ev: any) => (
+                    <div key={ev.id} className={`px-1.5 py-0.5 rounded text-[9px] md:text-[10px] font-medium truncate border-l-2 ${ev.status === "done" ? "bg-green-500/10 text-green-400 border-green-500" : ev.status === "in_progress" || ev.status === "in_review" ? "bg-yellow-500/10 text-yellow-400 border-yellow-500" : "bg-accent/30 text-foreground/80 border-muted-foreground/40"}`}
+                      title={`JUS-${ev.issueNumber} ${ev.title} (${ev.channel || ""})`}>
+                      <span className="font-bold">JUS-{ev.issueNumber}</span>{" "}
+                      <span className="hidden md:inline">{ev.title.replace(/^\[[^\]]+\]\s*/, "").substring(0, 25)}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ════════════════════════════════════════════════════════════
+// PAGE 4: MÉTRICAS DE PRODUTIVIDADE
+// ════════════════════════════════════════════════════════════
+
+function StatCard({ label, value, sub, color }: { label: string; value: string | number; sub?: string; color?: string }) {
+  return (
+    <div className="rounded-lg border border-border bg-card p-4 shadow-sm">
+      <div className={`text-2xl font-bold ${color || ""}`}>{value}</div>
+      <div className="text-xs text-muted-foreground mt-0.5">{label}</div>
+      {sub && <div className="text-[10px] text-muted-foreground/60 mt-0.5">{sub}</div>}
+    </div>
+  );
+}
+
+function BarChart({ data, maxVal }: { data: Array<{ label: string; value: number; color?: string }>; maxVal?: number }) {
+  const max = maxVal || Math.max(...data.map(d => d.value), 1);
+  return (
+    <div className="space-y-2">
+      {data.map((d, i) => (
+        <div key={i} className="flex items-center gap-2">
+          <span className="text-[11px] text-muted-foreground w-16 text-right shrink-0">{d.label}</span>
+          <div className="flex-1 h-5 bg-accent/20 rounded overflow-hidden">
+            <div className="h-full rounded transition-all" style={{ width: `${(d.value / max) * 100}%`, background: d.color || "hsl(var(--primary))" }} />
+          </div>
+          <span className="text-[11px] font-semibold w-8">{d.value}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+export function MetricsPage() {
+  const ctx = useHostContext();
+  const companyId = ctx?.companyId;
+  const { data: metrics, loading, refresh } = usePluginData<any>("metrics", { companyId });
+
+  if (!companyId) return <div className="p-8 text-muted-foreground">Selecione uma empresa.</div>;
+
+  return (
+    <div className="flex flex-col h-full text-foreground overflow-hidden">
+      <div className="px-4 py-2 border-b border-border flex items-center gap-2 flex-wrap bg-card/80 backdrop-blur-sm sticky top-0 z-10">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-muted-foreground shrink-0"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>
+        <span className="text-sm font-semibold mr-2">Métricas de Produtividade</span>
+        <button onClick={() => refresh()} className="ml-auto p-1.5 rounded-md border border-input text-muted-foreground hover:bg-accent transition-colors" title="Atualizar">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12a9 9 0 11-6.219-8.56" /><polyline points="21 3 21 9 15 9" /></svg>
+        </button>
+      </div>
+
+      <div className="flex-1 overflow-y-auto p-4 md:p-6">
+        {loading || !metrics ? <div className="text-center text-muted-foreground text-sm p-8">Carregando métricas...</div> : (
+          <div className="max-w-4xl mx-auto space-y-6">
+            {/* KPIs */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <StatCard label="Total de peças" value={metrics.total} />
+              <StatCard label="Concluídas" value={metrics.done} color="text-green-500" sub={`${metrics.total > 0 ? Math.round((metrics.done / metrics.total) * 100) : 0}% do total`} />
+              <StatCard label="Esta semana" value={`${metrics.thisWeekDone}/${metrics.weeklyTarget}`} color={metrics.thisWeekDone >= metrics.weeklyTarget ? "text-green-500" : "text-yellow-500"} sub="Meta semanal: 3" />
+              <StatCard label="Taxa de aprovação" value={`${metrics.approvalRate}%`} color={metrics.approvalRate >= 80 ? "text-green-500" : "text-yellow-500"} sub="Na primeira revisão" />
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-4">
+              {/* Produção semanal */}
+              <div className="rounded-lg border border-border bg-card p-4 shadow-sm">
+                <div className="text-sm font-semibold mb-3">Produção semanal</div>
+                <BarChart data={(metrics.weeklyProduction || []).map((w: any) => ({ label: w.week, value: w.count, color: w.count >= 3 ? "#10b981" : "#f59e0b" }))} maxVal={5} />
+              </div>
+
+              {/* Por editoria */}
+              <div className="rounded-lg border border-border bg-card p-4 shadow-sm">
+                <div className="text-sm font-semibold mb-3">Por editoria</div>
+                <BarChart data={Object.entries(metrics.byEditoria || {}).filter(([, v]: [string, any]) => v.total > 0).map(([tag, v]: [string, any]) => ({
+                  label: tag.substring(0, 12), value: v.total, color: TC[tag] || "hsl(var(--primary))",
+                }))} />
+              </div>
+
+              {/* Por agente */}
+              <div className="rounded-lg border border-border bg-card p-4 shadow-sm">
+                <div className="text-sm font-semibold mb-3">Desempenho por agente</div>
+                <div className="space-y-3">
+                  {(metrics.byAgent || []).map((a: any) => (
+                    <div key={a.id} className="flex items-center gap-3">
+                      <Avatar name={a.name} role={a.role} size="w-7 h-7 text-[10px]" />
+                      <div className="flex-1 min-w-0">
+                        <div className="text-xs font-semibold truncate" style={{ color: rc(a.role) }}>{a.name}</div>
+                        <div className="flex gap-3 text-[10px] text-muted-foreground">
+                          <span>{a.assigned} atribuídas</span>
+                          <span className="text-green-500">{a.done} concluídas</span>
+                          <span className="text-yellow-500">{a.inProgress} em progresso</span>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-sm font-bold" style={{ color: rc(a.role) }}>{a.assigned > 0 ? Math.round((a.done / a.assigned) * 100) : 0}%</div>
+                        <div className="text-[9px] text-muted-foreground">conclusão</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Status pipeline */}
+              <div className="rounded-lg border border-border bg-card p-4 shadow-sm">
+                <div className="text-sm font-semibold mb-3">Pipeline atual</div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="p-2 rounded bg-accent/20"><div className="text-lg font-bold text-muted-foreground">{metrics.backlog}</div><div className="text-[10px] text-muted-foreground">Backlog</div></div>
+                  <div className="p-2 rounded bg-yellow-500/10"><div className="text-lg font-bold text-yellow-500">{metrics.inProgress}</div><div className="text-[10px] text-muted-foreground">Em produção</div></div>
+                  <div className="p-2 rounded bg-purple-500/10"><div className="text-lg font-bold text-purple-500">{metrics.inReview}</div><div className="text-[10px] text-muted-foreground">Em revisão</div></div>
+                  <div className="p-2 rounded bg-green-500/10"><div className="text-lg font-bold text-green-500">{metrics.done}</div><div className="text-[10px] text-muted-foreground">Concluídas</div></div>
+                </div>
+                {metrics.topReasons?.length > 0 && (
+                  <div className="mt-4">
+                    <div className="text-xs font-medium text-muted-foreground mb-2">Motivos de reprovação mais comuns</div>
+                    {metrics.topReasons.map((r: any, i: number) => (
+                      <div key={i} className="flex items-center justify-between text-[11px] py-1 border-b border-border/50 last:border-0">
+                        <span className="text-muted-foreground">{r.reason}</span>
+                        <span className="font-semibold text-red-400">{r.count}x</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
   );
 }
 

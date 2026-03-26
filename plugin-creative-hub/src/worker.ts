@@ -242,7 +242,7 @@ const plugin = definePlugin({
     // ─── DATA: Gallery (carousels grouped by issue) ───
     ctx.data.register("gallery", async (params) => {
       const companyId = str(params.companyId);
-      const issues = await ctx.issues.list({ companyId, limit: 50 });
+      const issues = await ctx.issues.list({ companyId, limit: 200 });
 
       const agents = await ctx.agents.list({ companyId, limit: 50 });
       const agentMap = new Map<string, string>();
@@ -266,7 +266,10 @@ const plugin = definePlugin({
         images: Array<{ id: string; filename: string; contentType: string; byteSize: number }>;
       }> = [];
 
-      for (const issue of issues.slice(0, 30)) {
+      for (const issue of issues) {
+        // Skip cancelled/discarded issues
+        if (issue.status === "cancelled") continue;
+
         const tag = parseTag(issue.title);
         try {
           const resp = await fetch(`${apiBase}/api/issues/${issue.id}/attachments`, { headers });
@@ -321,6 +324,230 @@ const plugin = definePlugin({
 
       carousels.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
       return carousels;
+    });
+
+    // ─── DATA: Calendar (issues with publish dates) ───
+    ctx.data.register("calendar", async (params) => {
+      const companyId = str(params.companyId);
+      const issues = await ctx.issues.list({ companyId, limit: 100 });
+
+      const events: Array<{
+        id: string;
+        issueNumber: number;
+        title: string;
+        date: string;
+        tag: string | null;
+        status: string;
+        channel: string | null;
+        priority: string;
+      }> = [];
+
+      for (const issue of issues) {
+        const desc = (issue as any).description || "";
+        const dateMatch = desc.match(/\*\*Data de publica(?:cao|ção):\*\*\s*(\d{4}-\d{2}-\d{2})/);
+        if (!dateMatch) continue;
+
+        const channelMatch = desc.match(/\*\*Canal:\*\*\s*(.+)/);
+        events.push({
+          id: issue.id!,
+          issueNumber: (issue as any).issueNumber || 0,
+          title: issue.title,
+          date: dateMatch[1],
+          tag: parseTag(issue.title),
+          status: issue.status,
+          channel: channelMatch ? channelMatch[1].trim() : null,
+          priority: issue.priority,
+        });
+      }
+
+      events.sort((a, b) => a.date.localeCompare(b.date));
+      return events;
+    });
+
+    // ─── DATA: Metrics (productivity stats) ───
+    ctx.data.register("metrics", async (params) => {
+      const companyId = str(params.companyId);
+      const issues = await ctx.issues.list({ companyId, limit: 200 });
+      const agents = await ctx.agents.list({ companyId, limit: 50 });
+
+      const now = new Date();
+      const weekAgo = new Date(now.getTime() - 7 * 86400000);
+      const monthAgo = new Date(now.getTime() - 30 * 86400000);
+
+      // Basic counts
+      const total = issues.length;
+      const done = issues.filter(i => i.status === "done").length;
+      const inProgress = issues.filter(i => i.status === "in_progress").length;
+      const inReview = issues.filter(i => i.status === "in_review").length;
+      const backlog = issues.filter(i => i.status === "backlog" || i.status === "todo").length;
+
+      // This week
+      const thisWeekDone = issues.filter(i => i.status === "done" && new Date(i.updatedAt as any) >= weekAgo).length;
+
+      // By editoria
+      const byEditoria: Record<string, { total: number; done: number }> = {};
+      for (const issue of issues) {
+        const tag = parseTag(issue.title);
+        if (!tag) continue;
+        if (!byEditoria[tag]) byEditoria[tag] = { total: 0, done: 0 };
+        byEditoria[tag].total++;
+        if (issue.status === "done") byEditoria[tag].done++;
+      }
+
+      // By agent
+      const byAgent: Array<{ id: string; name: string; role: string; assigned: number; done: number; inProgress: number }> = [];
+      for (const agent of agents) {
+        const assigned = issues.filter(i => (i as any).assigneeAgentId === agent.id).length;
+        const agentDone = issues.filter(i => (i as any).assigneeAgentId === agent.id && i.status === "done").length;
+        const agentInProgress = issues.filter(i => (i as any).assigneeAgentId === agent.id && (i.status === "in_progress" || i.status === "in_review")).length;
+        if (assigned > 0) {
+          byAgent.push({ id: agent.id!, name: agent.name, role: agent.role, assigned, done: agentDone, inProgress: agentInProgress });
+        }
+      }
+
+      // Approval rate from rejection log
+      let approvalRate = 100;
+      try {
+        const log = await ctx.state.get({
+          scopeKind: "company", scopeId: companyId,
+          namespace: "creative-hub", stateKey: "rejection-log",
+        });
+        if (Array.isArray(log) && log.length > 0) {
+          const recentRejections = log.filter((r: any) => new Date(r.timestamp) >= monthAgo).length;
+          const totalReviewed = done + recentRejections;
+          approvalRate = totalReviewed > 0 ? Math.round((done / totalReviewed) * 100) : 100;
+        }
+      } catch { /* no log */ }
+
+      // Weekly production (last 4 weeks)
+      const weeklyProduction: Array<{ week: string; count: number }> = [];
+      for (let w = 3; w >= 0; w--) {
+        const start = new Date(now.getTime() - (w + 1) * 7 * 86400000);
+        const end = new Date(now.getTime() - w * 7 * 86400000);
+        const count = issues.filter(i => {
+          const d = new Date(i.updatedAt as any);
+          return i.status === "done" && d >= start && d < end;
+        }).length;
+        const label = `Sem ${4 - w}`;
+        weeklyProduction.push({ week: label, count });
+      }
+
+      // Top rejection reasons
+      let topReasons: Array<{ reason: string; count: number }> = [];
+      try {
+        const log = await ctx.state.get({
+          scopeKind: "company", scopeId: companyId,
+          namespace: "creative-hub", stateKey: "rejection-log",
+        });
+        if (Array.isArray(log)) {
+          const reasonCounts: Record<string, number> = {};
+          for (const entry of log) {
+            for (const r of (entry as any).reasons || []) {
+              reasonCounts[r] = (reasonCounts[r] || 0) + 1;
+            }
+          }
+          topReasons = Object.entries(reasonCounts)
+            .map(([reason, count]) => ({ reason, count }))
+            .sort((a, b) => b.count - a.count)
+            .slice(0, 5);
+        }
+      } catch { /* no log */ }
+
+      return {
+        total, done, inProgress, inReview, backlog,
+        thisWeekDone, weeklyTarget: 3,
+        approvalRate,
+        byEditoria,
+        byAgent,
+        weeklyProduction,
+        topReasons,
+      };
+    });
+
+    // ─── ACTION: Create briefing (structured issue + wake orchestrator) ───
+    ctx.actions.register("create-briefing", async (params) => {
+      const companyId = str(params.companyId);
+      const editoria = str(params.editoria);
+      const formato = str(params.formato);
+      const canal = str(params.canal);
+      const publico = str(params.publico);
+      const data = str(params.data);
+      const tema = str(params.tema);
+      const descricao = str(params.descricao);
+
+      // Find project
+      const projects = await ctx.issues.list({ companyId, limit: 1 });
+      const projectId = (projects[0] as any)?.projectId || undefined;
+
+      const title = `[${editoria}] ${tema}`;
+      const description = [
+        `**Data de publicação:** ${data}`,
+        `**Canal:** ${canal}`,
+        `**Editoria:** ${editoria}`,
+        `**Formato:** ${formato}`,
+        `**Público:** ${publico}`,
+        ``,
+        `**Briefing:**`,
+        descricao,
+        ``,
+        `**Pipeline:**`,
+        `1. Research Subagent levanta contexto, base legal e dados`,
+        `2. Writer Subagent gera 3 opções de gancho + copy completo + brief visual`,
+        `3. Designer Subagent cria as peças visuais (cards HTML + PNGs)`,
+        `4. Critic Subagent avalia (score >= 8.0 para aprovar)`,
+        `5. Revisão humana final na Galeria`,
+      ].join("\n");
+
+      const issue = await ctx.issues.create({
+        companyId,
+        projectId,
+        title,
+        description,
+        priority: "high",
+      });
+
+      // Post to hub timeline
+      try {
+        const msgs = await ctx.state.get({
+          scopeKind: "company", scopeId: companyId,
+          namespace: "creative-hub", stateKey: "messages",
+        }).catch(() => []);
+        const list = Array.isArray(msgs) ? msgs : [];
+        list.push({
+          id: `briefing-${Date.now()}`,
+          type: "chat",
+          timestamp: new Date().toISOString(),
+          authorType: "human",
+          authorId: null,
+          authorName: "Board",
+          body: `Novo briefing criado: ${title}\nFormato: ${formato} | Canal: ${canal} | Data: ${data}`,
+          imageUrls: [],
+          mentions: [],
+          tags: [editoria],
+          issueId: (issue as any).id,
+          issueNumber: (issue as any).issueNumber,
+          issueTitle: title,
+        });
+        await ctx.state.set(
+          { scopeKind: "company", scopeId: companyId, namespace: "creative-hub", stateKey: "messages" },
+          list.slice(-500),
+        );
+      } catch { /* best effort */ }
+
+      // Wake orchestrator
+      try {
+        const agents = await ctx.agents.list({ companyId, limit: 50 });
+        const orch = agents.find((a: any) => a.role === "ceo");
+        if (orch?.id) {
+          await ctx.agents.invoke(orch.id, companyId, {
+            prompt: `Novo briefing recebido: ${title}. Issue criada. Classifique e inicie o pipeline de produção delegando para os subagentes.`,
+            reason: "Novo briefing via Creative Hub",
+          });
+        }
+      } catch { /* skip */ }
+
+      await ctx.activity.log({ companyId, message: `Briefing criado: ${title}`, entityType: "issue", entityId: (issue as any).id });
+      return { success: true, issueId: (issue as any).id, issueNumber: (issue as any).issueNumber };
     });
 
     // ─── DATA: Dashboard feed (latest 10 entries) ───
@@ -385,10 +612,17 @@ const plugin = definePlugin({
         { scopeKind: "issue", scopeId: issueId, namespace: "creative-hub", stateKey: "review-status" },
         "rejected",
       );
-      await ctx.issues.update(issueId, { status: "in_progress" }, companyId);
 
-      // 2. Get issue info for context
+      // 2. Get issue info + find designer to assign
       const issue = await ctx.issues.get(issueId, companyId);
+      const agents = await ctx.agents.list({ companyId, limit: 50 });
+      const designer = agents.find((a: any) => a.role === "designer" && a.name.includes("Designer"));
+
+      // Assign to designer and set in_progress
+      await ctx.issues.update(issueId, {
+        status: "in_progress",
+        ...(designer?.id ? { assigneeAgentId: designer.id } : {}),
+      } as any, companyId);
       const issueTitle = issue?.title || issueId;
       const issueNumber = (issue as any)?.issueNumber || "?";
 
@@ -465,8 +699,6 @@ const plugin = definePlugin({
 
       // 7. Wake the designer agent to rework
       try {
-        const agents = await ctx.agents.list({ companyId, limit: 50 });
-        const designer = agents.find((a: any) => a.role === "designer" && a.name.includes("Designer"));
         if (designer?.id) {
           await ctx.agents.invoke(designer.id, companyId, {
             prompt: `Carrossel JUS-${issueNumber} reprovado na revisão humana.\n\nMotivos: ${reasons.join(", ")}\n${note ? `Direcionamento: ${note}\n` : ""}\nVá até a issue ${issueId}, leia o feedback completo nos comentários, consulte a skill de erros recorrentes, e crie uma nova versão corrigida.`,
@@ -475,6 +707,21 @@ const plugin = definePlugin({
         }
       } catch { /* agent may be busy */ }
 
+      return { success: true };
+    });
+
+    // ─── ACTION: Discard a piece (archive without feedback) ───
+    ctx.actions.register("discard-piece", async (params) => {
+      const issueId = str(params.issueId);
+      const companyId = str(params.companyId);
+
+      await ctx.state.set(
+        { scopeKind: "issue", scopeId: issueId, namespace: "creative-hub", stateKey: "review-status" },
+        "discarded",
+      );
+      await ctx.issues.update(issueId, { status: "cancelled" }, companyId);
+      await ctx.issues.createComment(issueId, "[DESCARTADA] Peça descartada definitivamente. Issue arquivada sem feedback ao agente.", companyId);
+      await ctx.activity.log({ companyId, message: "Peça descartada e arquivada", entityType: "issue", entityId: issueId });
       return { success: true };
     });
 
